@@ -4,7 +4,7 @@
 
 With the escalation of jekyll version, but I also want to reconstruct my older blog theme, so I did reconstruction and added some features recently. My new blog theme will still be stored in this repository. I will also use this theme in the future. Now I have done basically, then I will focus on issues that users opend to make theme better.
 
-**My Blog Url: [http://gaohaoyang.github.io/](http://gaohaoyang.github.io/)**. If you like this theme, you can give me a star to encourage me. Welcome everyone to use it.
+**My Blog Url: [http://tanfengshuang.github.io/](http://tanfengshuang.github.io/)**. If you like this theme, you can give me a star to encourage me. Welcome everyone to use it.
 
 ## Content
 
@@ -294,69 +294,13 @@ Visit localhost:4000 to see your blog!!!
 
 If there is nothing wrong, push code to your github!
 
-## Donate
-
-You can also donate me for a coffee, and I'll do better. Thanks.
-
-|                                                                     PayPal                                                                     |                                 Wechat Pay                                  |                                   Alipay                                    |
-|:----------------------------------------------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------:|:---------------------------------------------------------------------------:|
-| [![PayPal](https://www.paypalobjects.com/webstatic/paypalme/images/pp_logo_small.png)<br>Donate via PayPal ](https://www.paypal.me/gaohaoyang) | ![wechat](http://ww2.sinaimg.cn/large/7011d6cfjw1f3bkdw3bslj206z06q3z6.jpg) | ![alipay](http://ww2.sinaimg.cn/large/7011d6cfjw1f3bk8ikzoij20740743z5.jpg) |
-
-Thanks these friends!!!
-
-* 2016.10.24 received 奇峰 ¥6.66
-* 2016.10.21 received 旭廷 ¥10.00
-* 2016.09.25 received 鑫 ¥6.66
-* 2016.08.25 received Erlend Aakre $2.50
-* 2016.08.10 received ¥4.40
-* 2016.07.25 received 邓炳初 ¥6.66
-* 2016.07.11 received 彦风 ¥6.66
-* 2016.07.07 received Klci ¥2.50
-* 2016.05.08 received 1057 ¥10.57
-* 2016.05.07 received 吴林 ¥2
-* 2016.04.29 received 北归 ¥10
-* 2016.04.28 received 魏楚阳_Brian ¥2
-* 2016.04.28 received 薛彬 ¥8.8
-
-
 ## Update Log
 
 ### 2016.6.20
 
-* `[+]` Add next post and previous post link in post page.
-* `[^]` Change the sort of font-family to avoid full-width half-width characters mistake.
-* `[^]` Fix bug in tags cloud when division by zero. [#26](https://github.com/Gaohaoyang/gaohaoyang.github.io/issues/26), [#28](https://github.com/Gaohaoyang/gaohaoyang.github.io/issues/28), [#30](https://github.com/Gaohaoyang/gaohaoyang.github.io/issues/30)
+* Created my own blog by refering to http://gaohaoyang.github.io/
 
-### 2016.5.11 v2.0.1
-
-* `[^]` Optimized code, Extracting common code to `comments.html`
-* `[+]` Add Google Analysis and Baidu Statistics
-* `[+]` Update README, add usage
-* `[+]` Add `favicon.ico`
-* `[^]` Fix bug at contents
-* `[^]` Change the content scroll bar CSS style（Only for `webkit` browser kernel）
-* `[^]` Change tag a color at demo page
-* `[+]` Add busuanzi counter, show the views count at footer
-* `[+]` Add back to top button
-
-### 2016.4.27 v2.0.0
-
-* `[^]` Rewrite all codes based on jekyll 3.1.2
-* `[+]` Add excerpt at index page
-* `[+]` Add recently post, categories and tags cloud at index page
-* `[+]` Add light shadow at navbar
-* `[+]` Add archives, categories, tags page
-* `[+]` Add collections page
-* `[+]` Add comments plugin with disqus or duoshuo
-* `[+]` Mobile Adaptation
-* `[+]` Fix post contents to the right side while scrolling page
-* `[+]` Fix footer at the bottom when page height is smaller than window height
-* `[^]` Use github flavored markdown to write code block(Fenced code blocks)
-* `[^]` Rewrite the demo page with Masonry
-* `[-]` Remove jQuery and BootStrap
-
-About my old blog theme, I won't maintain any more. And I put the code at  [Gaohaoyang/old-blog](https://github.com/Gaohaoyang/old-blog).
 
 ## License
 
-[MIT License](https://github.com/Gaohaoyang/gaohaoyang.github.io/blob/master/LICENSE.md)
+[MIT License](https://github.com/tanfengshuang/tanfengshuang.github.io/blob/master/LICENSE)
