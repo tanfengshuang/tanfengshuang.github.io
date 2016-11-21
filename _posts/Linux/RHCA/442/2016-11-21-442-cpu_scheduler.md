@@ -5,6 +5,7 @@ categories: Linux
 tags: RHCA 442
 ---
 
+```
 # chrt -p 1
 # chrt -p 3
 # chrt -m
@@ -57,4 +58,4 @@ clipboardcache-1						   hsperfdata_ftan	  keyring-Rn1GQt  orbit-ftan	pulse-eEDK
 evince-4843							   kde-ftan		  krb5cc_500	  orbit-gdm	staplJERbf
 
  0 0.00 0.00
-
+```

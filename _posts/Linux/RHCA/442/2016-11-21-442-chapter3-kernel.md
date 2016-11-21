@@ -6,9 +6,9 @@ tags: RHCA 442
 ---
 
 
-=============================================
- Displaying and Configuring Module Parameters
-=============================================
+#### Displaying and Configuring Module Parameters
+
+```
 # lsmod			-> 查看当前系统已经装载的模块
 # modinfo usb_storage
 # modinfo -p usb_storage
@@ -18,26 +18,36 @@ swi_tru_install:TRU-Install mode (1=Full Logic (def), 2=Force CD-Rom, 3=Force Mo
 option_zero_cd:ZeroCD mode (1=Force Modem (default), 2=Allow CD-Rom
 # lsmod | grep usb
 usb_storage            49100  0
+```
 
-临时修改一个值
-1).
+###### 临时修改一个值
+
+1. 
+
+```
 # cat /sys/module/usb_storage/parameters/delay_use
 1
 # echo 5 >  /sys/module/usb_storage/parameters/delay_use
 # cat /sys/module/usb_storage/parameters/delay_use
 5
+```
 
-2).
+2.
+
+```
 # rmmod usb_storage					-> 卸载模块
 # cat /sys/module/usb_storage/parameters/delay_use 
 cat: /sys/module/usb_storage/parameters/delay_use: No such file or directory
 # modprobe usb_storage delay_use=6			-> 加载模块的同时手动加载参数
 # cat /sys/module/usb_storage/parameters/delay_use 
 6
+```
 
+######  永久修改一个值
 
-永久修改一个值
-1).
+1.
+
+```
 # vim /etc/modprobe.d/usb_storage.conf
 options usb_storage delay_use=4
 # rmmod usb_storage
@@ -47,8 +57,10 @@ cat: /sys/module/usb_storage/parameters/delay_use: No such file or directory
 #  cat /sys/module/sub_storage/parameters/delay_use
 4
 # depmod -a						-> 下次开机还能加载，把当前的已经加载的所有模块的信息写到一个配置文件里面，下次开机如果还能读取这个配置文件，会加载文件里的所有模块
+```
 
-2).
+2.
+```
 # grep -n  modules /etc/rc.sysinit			->  rc.sysinit系统初始化脚本
 # Load other user-defined modules
 for file in /etc/sysconfig/modules/*.modules ; do	-> 找到/etc/sysconfig/modules/目录下的所有modules结尾的文件
@@ -70,11 +82,11 @@ modprobe usb_storage delay_use=6		-> delay_use=6 也可以放在/etc/modprobe.d/
 # ./usb_storage.modules
 # cat /sys/module/usb_storage/parameters/delay_use
 6
+```
 
+####  Installing and Enabling tuned   -> rhel6新引进的系统优化程序，可以提供9种性能模式
 
-=================================================================
-  Installing and Enabling tuned   -> rhel6新引进的系统优化程序，可以提供9种性能模式
-=================================================================
+```
 # yum install tuned
 # /etc/init.d/ktune start
 # /etc/init.d/tuned start
@@ -94,4 +106,5 @@ Available profiles:
 Current active profile: default
 # tuned-adm profile server-powersave
 # cd /etc/tune-profile/
-# 
+```
+
