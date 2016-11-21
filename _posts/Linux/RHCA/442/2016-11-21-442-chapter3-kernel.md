@@ -22,7 +22,7 @@ usb_storage            49100  0
 
 ###### 临时修改一个值
 
-1. 
+1.
 
 ```
 # cat /sys/module/usb_storage/parameters/delay_use
