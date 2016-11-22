@@ -37,6 +37,7 @@ If your Jenkins job needs to run something that displays a GUI, you cannot run t
 (In Linux you can play tricks with Xvnc or similar fake X servers and there are even Jenkins plugins that make it simpler.)
 
 Your alternatives are either:
+
 *    Log in using the GUI session and run Jenkins in a terminal window by typing java -jar /path/to/jenkins.war. When Jenkins is started in the GUI context, any processes started by Jenkins are able to talk to the GUI system and draw windows.
 *    Or you can set up a JNLP slave in Jenkins, then log in using the GUI session, open a web browser to access your Jenkins and start the JNLP slave that connects to Jenkins master and now that the slave is running in GUI context, you can configure the job to execute on the slave. Processes that execute in the slave will be able to talk to the GUI system and draw windows.
 
