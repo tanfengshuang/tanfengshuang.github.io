@@ -2,8 +2,10 @@
 layout: post
 title:  "用户和组"
 categories: Linux
-tags: RHCSA user
+tags: RHCSA useradd usermod chage groupadd id finger
 ---
+
+关于linux的基本命令的详细使用可以通过网站 [http://man.linuxde.net/](http://man.linuxde.net/)查看
 
 ### 添加用户
 
@@ -20,6 +22,9 @@ useradd
 *   -s <shell>      指定用户登入后所使用的shell
 *   -u <uid>        指定用户ID
 
+### 删除用户
+
+userdel -r ...
 
 ### 修改用户信息
 
@@ -36,9 +41,43 @@ usermod
 *   -s <shell>      改变用户的默认shell
 *   -u <uid>        改变用户的UID
 
-### 添加一个组
+### 修改用户密码
 
-groupadd
+```
+# echo 123.com | passwd --stdin root
+```
+
+### chage
+
+快速清晰查看某个账户在/etc/shadow中描述的内容
+
+```
+# chage -l root
+Last password change					: Jul 05, 2016
+Password expires					: never
+Password inactive					: never
+Account expires						: never
+Minimum number of days between password change		: 0
+Maximum number of days between password change		: 99999
+Number of days of warning before password expires	: 7
+
+```
+
+强制账户在第一次登录时修改密码
+
+```
+# chage -d 0 $new_user
+```
+
+### 组
+
+*    groupadd
+*    groupdel
+
+组的配置信息文件
+/etc/group
+/etc/gshadow
+
 
 ### 检查用户身份
 
@@ -48,5 +87,3 @@ groupadd
 *   id      显示用户id信息
 *   finger  查询用户信息 登录时间 邮件
 
-
-<>
