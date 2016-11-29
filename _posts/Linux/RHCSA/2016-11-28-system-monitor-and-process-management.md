@@ -62,21 +62,23 @@ tags: RHCSA kill pidof pgrep nice last lastlog pstree jobs fg bg
 
 #### 搜索进程
 
-*    pgrep
-*    pidof
-*    ps aux | grep xxx    
+```
+# pgrep
+# pidof
+# ps aux | grep xxx    
+```
 
 #### 进程的优先级
 
-进程的优先级用nice值来表示, 优先级受到进程的"好心"值(nice value)的影响，这个值的范围是-20到19，默认为0
+进程的优先级用nice值来表示, 优先级受到进程的"好心"值(nice value)的影响，这个值的范围是-20到19(其中-20最高，19最低)，默认为0
 
 *    nice   以一个不同的nice值来运行指令
 
-    nice -n/n command
+    nice -n command
 
 *    renice 改变一个运行进程的nice值
 
-    renice -n/n pid
+    renice -n pid
 
 #### 后台运行
 
