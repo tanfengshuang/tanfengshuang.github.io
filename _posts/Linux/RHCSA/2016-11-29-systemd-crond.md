@@ -31,13 +31,13 @@ tags: RHCSA systemd systemctl at crontab ssh
 
 ##### 目标(target)
 
-0 关机                      poweroff.target     runlevel0.target
-1 单用户                    rescue.target       runlevel1.target
-2 字符多用户界面，无网络    multi-user.target   runlevel2.target
-3 字符多用户界面，生产模式  multi-user.target   runlevel3.target
-4 保留模式                  multi-user.target   runlevel4.target
-5 图形化多用户模式          graphical.target    runlevel5.target
-6 重启                      reboot.target       runlevel6.target
+*    0 关机                      poweroff.target     runlevel0.target
+*    1 单用户                    rescue.target       runlevel1.target
+*    2 字符多用户界面，无网络    multi-user.target   runlevel2.target
+*    3 字符多用户界面，生产模式  multi-user.target   runlevel3.target
+*    4 保留模式                  multi-user.target   runlevel4.target
+*    5 图形化多用户模式          graphical.target    runlevel5.target
+*    6 重启                      reboot.target       runlevel6.target
 
 
 ```
@@ -66,26 +66,29 @@ graphical.target
 # systemctl isolate multi-user.target
 ```
 
-### ssh
+### ssh服务
 
-##### 公钥私钥
+###### 公钥私钥
 
 ```
 # ssh-keygen
 # ssh-copy-id
 ```
 
-##### 配置文件
+###### 配置文件
 
-/etc/ssh/ssh_config     ssh客户端配置文件
+/etc/ssh/ssh_config     ssh客户端配置文件    
 /etc/ssh/sshd_config    ssh服务器配置文件
 
 ```
 # vim /etc/ssh/sshd_config
 PermitRootLogin yes     是否允许root登录
 PasswordAuthentication yes  是否允许密码登录
+```
 
-密钥文件
+###### 密钥文件
+
+```
 # ll /etc/ssh/ssh_host*
 -rw-r-----. 1 root ssh_keys  227 Oct 26 10:01 /etc/ssh/ssh_host_ecdsa_key
 -rw-r--r--. 1 root root      162 Oct 26 10:01 /etc/ssh/ssh_host_ecdsa_key.pub
@@ -110,14 +113,15 @@ lrzsz-0.12.20-39.fc24.x86_64
 
 ##### at
 
-at <时间描述>
-at> <任务描述>
-at> <ctrl+d>
+*    at <时间描述>    
 
-atq 查询当前用户正在等待的计划任务
-atrm <任务号>   删除一个正在等待的计划任务
+>    at> <任务描述>
 
-可以在配置文件/etc/at.deny中添加禁止执行at命令的用户
+>    at> <ctrl+d>
+
+*    atq 查询当前用户正在等待的计划任务    
+*    atrm <任务号>   删除一个正在等待的计划任务    
+*    可以在配置文件/etc/at.deny中添加禁止执行at命令的用户
 
 ```
 # at 6pm Monday
@@ -139,7 +143,7 @@ atrm <任务号>   删除一个正在等待的计划任务
 *    crontab -e  编辑当前用户的计划任务时间表
 *    crontab -l  列出当前的计划任务时间表
 *    crontab -r  删除当前的计划任务时间表
-*    crontab -u username <-e|-l|-r>  以某一个用户的身份管理
+*    crontab -u username <-e -l -r>  以某一个用户的身份管理
 *    用户时间表文件: /var/spool/cron/username
 *    可以在配置文件/etc/corn.deny中添加禁止执行crontab命令的用户
 *    /etc下面的cron.daily/   cron.hourly/  cron.monthly/ cron.weekly/ 是系统的定时任务
