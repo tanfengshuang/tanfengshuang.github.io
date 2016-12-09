@@ -184,45 +184,106 @@ UUID=xxxxxx /mnt/qinlv  xfs    defaults,usrquota,grpquota  0   0
 
 ### RAID
 
+*    磁盘阵列(Redundant Arrays of Independent Disks，RAID)，独立冗余磁盘阵列，诞生于1987年，由美国加州大学伯克利分校提出
+*    简单的说，就是将N块硬盘通过RAID Controller(分Hardware Software)结合成虚拟单块大容量的硬盘使用，其特色是N台硬盘同时读取速度加快及提供容错性(Fault Tolerant)，所以RAID是当成平时主要访问数据的Storage而不是Backup Solution
+
+
 ###### RAID0
+
+RAID0又称为Stripe或Striping，中文译为集带工作方式，有时也可以理解为“拼凑”
+它是将要存取的数据以条带形式尽量平均分配到多个硬盘上，读写时多个硬盘同时进行读写，从而提高数据的读写速度。RAID0另一目的是获得更大的"单个"磁盘容量
 
 ###### RAID1
 
+*    又称为Mirror或Mirroring，中文译为镜像方式
+*    这种工作方式的出现完全是为了数据安全考虑的，它是把用户写入硬盘的数据百分之百的自动复制到另外一块硬盘上或硬盘的不同地方（镜像）。当读取数据时，系统先从RAID1的源盘读取数据，如果数据读取成功，则系统不去管备份盘上的数据，如果读取源盘数据失败，则系统自动转而读取备份盘上的数据，不会造成用户工作任务的中断
+*    由于对存储的数据进行百分百的备份，在所有RAID级别中，RAID1提供最高的数据安全保障。同样，由于数据的百分之百备份，备份数据占了总存储空间的一半，因而，Mirror的磁盘空间利用率低，存储成本高。
+
+
 ###### RAID5
+
+*    RAID5是一种存储性能，数据安全和存储成本兼顾的存储解决方案，也是目前应用最广泛的RIAD技术
+*    各块独立硬盘进行条带化分割，相同的条带区进行奇偶校验（异或运算），校验数据平均分配在每块硬盘上
+*    以N块硬盘构建的RAID5阵列可以有2/3硬盘的容量，存储空间利用率非常高
+*    RAID5不对存储的数据进行备份，而是把数据和相对应的奇偶校验信息存储到组成RAID5的各个磁盘上，并且奇偶校验信息和相对应的数据分别存储于不同的磁盘上。当RAID5的任何一块磁盘上的数据丢失，均可以通过校验数据推算出来
+
+
+###### Software RAID
+
+一般的中高档服务器多使用硬件RAID控制器来实现Hardware RAID，但是由于硬件RAID控制器的价格昂贵，导致系统成本大大增加。而随着处理器的性能快速发展，使得软件RAID的解决方法得到人们的重视
+Software RAID即软件磁盘阵列，软件RAID使您可以将两个或多个块设备（通常是磁盘区）组合为单个RAID设备（/dev/mdX）
+例如，假定有三个空分区hda3 hdb3和hdc3，是哟该软件RAID管理工具mdadm就能将这些分区组合起来
+
 
 ###### mdadmin管理工具
 
+mdadm工具是一个管理软件RAID的独立程序，它能完成所有的软RAID管理功能
+
+mdadm常用选项：
+
+*    -A <阵列设备名>, --assemble： 加入一个以前定义的阵列
+*    -C <阵列设备名>, --create： 创建一个新的阵列
+*    -D <阵列设备名>, --detail： 显示md device的详细信息
+*    -a yes： 自动创建md阵列文件
+*    -l，--level=： 设定raid level
+*    -s，--scan：扫描配置文件或/proc/mdstat/以搜寻丢失的信息
+*    -n，--raid-devices=： 指定阵列中可用device数目，这个数目只能由--grow修改
+*    -x，--spare-devices： 指定初始阵列的富余device数目
+*    -r,--remove： 删除指定磁盘
+*    -f,--fail： same as --set-faulty，标记坏磁盘
+*    -x,--spare-devices=： 指定热备磁盘数目
+
+
 ```
 # RAID0
+添加2块硬盘，并分区
+# fdisk -l | grep "Disk /dev/sd"
+# mdadm -C /dev/md0 -a yes -l 0 -n 2 /dev/sdb1 /dev/sdc1
+# mkfs.xfs /dev/md0
+# mkdir /mnt/md0
+# mount /dev/md0 /mnt/md0
+# dd if=/dev/zero of=/mnt/md0/md0test bs=1M count=500
+# df -Th
+# mdadm -D /dev/md0
+
+# RAID1
+# mdadm -C /dev/md1 -a yes -l 1 -n 2 /dev/sdb2 /dev/sdc2
+# mkdir /mnt/md1
+# mount /dev/md1 /mnt/md1
+# dd if=/dev/zero of=/mnt/md0/md1test bs=1M count=500
+# df -Th
+# mdadm -D /dev/md1
+
+# RAID5
+# mdadm -C /dev/md5 -a yes -l 5 -n 3 /dev/sdb3 /dev/sdc3 /dev/sdd3
+# mkdir /mnt/md5
+# mount /dev/md5 /mnt/md5
+# dd if=/dev/zero of=/mnt/md0/md5test bs=1M count=500
+# df -Th
+# mdadm -D /dev/md5
+
+# RAID5坏一块硬盘
+# dd if=/dev/zero of=/mnt/md5/md5file bs=1M count=500
+# df -Th
+# umount /mnt/md5
+# mdadm /dev/md5 -f /dev/sdd3	-> 将/dev/sdd3标记为坏盘
+# mdadm -D /dev/md5
+# mount /dev/md5 /mnt/md5
+# ll /mnt/md5
+# df -Th
+# mdadm /dev/md5 -r /dev/sdd3	-> 热拔/dev/sdd3
+# mdadm -D /dev/md5		-> 显示只剩两块硬盘
+# mdadm /dev/md5 -a /dev/sdd3	-> 热插/dev/sdd3
+# mdadm -D /dev/md5		-> 快速查看，可以看到同步数据的百分比变化
+# ll /mnt/md5
+
+# RAID5热备
+# mdadm -C /dev/md5x -a yes -l 5 -n 3 -x 1 /dev/sdb4 /dev/sdc4 /dev/sdd4 /dev/sde4
+# mkfs.xfs /dev/md5x
+# mkdir /mnt/md5x
+# mount /dev/md5x /mnt/md5x
+# dd if=/dev/zero of=/mnt/md5x/md5test bs=1M count=500
+# df -Th
+# mdadm -D /dev/md5x
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

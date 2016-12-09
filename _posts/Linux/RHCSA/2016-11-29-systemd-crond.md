@@ -7,7 +7,11 @@ tags: RHCSA systemd systemctl at crontab ssh
 
 关于linux的基本命令的详细使用可以通过网站 [http://man.linuxde.net/](http://man.linuxde.net/)查看
 
+
 ### systemd
+
+[Systemd 入门教程：命令篇](http://www.ruanyifeng.com/blog/2016/03/systemd-tutorial-commands.html)
+[Systemd 入门教程：实战篇](http://www.ruanyifeng.com/blog/2016/03/systemd-tutorial-part-two.html)
 
 *    RHEL7使用systemd替换了sysV, systemd目的是要取代Unix时代以来一直在使用的init系统，兼容SysV和LSB的启动脚本，而且能够在进程启动过程中更有效的引导加载服务
 *    支持并行化服务
