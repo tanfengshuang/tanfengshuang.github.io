@@ -23,8 +23,9 @@ tags: RHCE
 4. 当客户端浏览完成后，服务器会等待客户端一会儿，超过一定时间客户端没有新请求的话，就服务器就会断开连接
 
 
-CCNA router and switch
-huawei
+> CCNA router and switch
+
+> huawei
 
 
 ### Apache服务
@@ -36,7 +37,8 @@ huawei
 *    配置路径：/etc/httpd/conf/httpd.conf
 *    默认网站存放地址：/var/www/html/
 
-/etc/httpd/conf/httpd.conf
+```
+# vim /etc/httpd/conf/httpd.conf
 ServerRoot "/etc/httpd"
 Listen 80
 Include conf.modules.d/*.conf
@@ -52,7 +54,7 @@ ServerName www.example.com:80
     ScriptAlias /cgi-bin/ "/var/www/cgi-bin/"
 </IfModule>
 IncludeOptional conf.d/*.conf
-
+```
 
 
 ```
@@ -146,7 +148,7 @@ print "$now\n";
 #! /usr/bin/env python
 import time
 def application(environ, start_response):
-    response_body = 'UNIX EPOCH time is now: %s\n" % time.time()
+    response_body = 'UNIX EPOCH time is now: %s\n' % time.time()
     status = '200 OK'
     response_headers = [('Content-Type', 'text/plain'),
                         ('Content-Length', '1'),
@@ -166,7 +168,7 @@ def application(environ, start_response):
     <ifmodule alias_module>
         scriptalias /jiaoben/ "/var/www/cgi-bin/"
     </ifmodule>
-<virtualhost>
+</virtualhost>
 
 # 对于python脚本，需要先安装模块mod_wsgi
 # yum install mod_wsgi
@@ -175,7 +177,7 @@ def application(environ, start_response):
     servername 192.168.100.1
     documentroot /var/www/html
     wsgiscriptalias /python /var/www/cig-bin/
-<virtualhost>
+</virtualhost>
 ```
 
 ### allow,deny
