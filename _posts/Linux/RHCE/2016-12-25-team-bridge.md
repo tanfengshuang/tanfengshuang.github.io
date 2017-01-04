@@ -34,8 +34,9 @@ GENERAL.DEVICE:		eno50332208
 
 新建team设备和连接配置文件
 # nmcli connection add type 
-adsl        bond        cdma        gsm         ip-tunnel   olpc-mesh   team        vlan        vxlan       wimax       
-bluetooth   bridge      ethernet    infiniband  macvlan     pppoe       tun         vpn         wifi        
+adsl        bond        cdma        gsm         ip-tunnel   olpc-mesh   team        vlan
+vxlan       wimax       bluetooth   bridge      ethernet    infiniband  macvlan     pppoe
+tun         vpn         wifi        
 # nmcli connection add type team con-name qinteamfile ifname qinteamdevice config '{"runner":{"name":"activebackup"}}'
 # nmcli connection show		-> 出现qinteamdevice设备并和qinteamfile配置文件关联在一起
 # nmcli connection modify qinteamfile ipv4.method manual ipv4.addresses 192.168.100.88 ipv4.gateway 192.168.100.1 ipv4.dns 192.168.100.1 connection.autoconnect yes

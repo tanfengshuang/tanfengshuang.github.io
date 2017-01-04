@@ -26,6 +26,11 @@ useradd
 
 userdel -r ...
 
+```
+# userdel linuxde       //删除用户linuxde，但不删除其家目录及文件
+# userdel -r linuxde    //删除用户linuxde，其家目录及文件一并删除；
+```
+
 ### 修改用户信息
 
 usermod

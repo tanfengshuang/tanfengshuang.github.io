@@ -9,6 +9,9 @@ tags: Python
 # curl -O https://bitbucket.org/pypa/setuptools/raw/bootstrap/ez_setup.py
 # python ez_setup.py
 
+# wget https://bootstrap.pypa.io/get-pip.py
+# python get-pip.py
+
 # easy_install pip   
 # pip install -U distribute
 # easy_install -m distribute
