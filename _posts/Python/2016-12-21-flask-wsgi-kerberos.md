@@ -116,5 +116,5 @@ Part 2: Apache and Kerberos for Django Authentication + Authorization[http://www
 ### Flask
 
 
-How to access Apache Basic Authentication user in Flask [http://stackoverflow.com/questions/20940651/how-to-access-apache-basic-authentication-user-in-flask]
-
+[How to access Apache Basic Authentication user in Flask](http://stackoverflow.com/questions/20940651/how-to-access-apache-basic-authentication-user-in-flask)
+[http basic authentication “log out”](http://stackoverflow.com/questions/4163122/http-basic-authentication-log-out)
