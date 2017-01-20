@@ -146,14 +146,16 @@ none on /proc/sys/fs/binfmt_misc type binfmt_misc (rw)
 
 ###### Extended File Attributes
 
-###### Performance Checklist: Manipulating Filesystem Attributes
-
 ```
 # lsattr /etc/passwd
 -------------e- /etc/passwd
 
-# lsattr /etc/                       <------    /etc/下的文件属性都是 -------------e-
+# lsattr /etc/                
+```
 
+###### Performance Checklist: Manipulating Filesystem Attributes
+
+```
 # touch /etc/aa
 # lsattr /etc/aa
 -------------e- /etc/aa
