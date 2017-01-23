@@ -1,0 +1,130 @@
+红帽服务器硬化RH413练习题库
+1.配置一个认证服务器：
+station1为domain7.example.com的客户端根据下列要求提供认证服务：
+1）Kerberos realm是DOMAIN7.EXAMPLE.COM
+2）administrative或者其他的密码设置为postroll
+3）认证服务提供的ID范围为：4500-14500
+认证服务启动后，在web页面管理中心创建如下帐号：
+（1）
+name:Lukesh Rao
+Username:lukesh
+UID:45001
+Group:lukesh
+GID:4501
+Home directory:/home/remoteusers/lukesh
+Initial password:postrall
+（2）
+name：Elana Bianchi
+User:elana
+UID:4502
+Group:elana
+GID:4502
+Home directory:/home/remoteusers/elana
+Initial password:postrall
+（3）
+Name:Midori Inoue
+Username:midori
+UID:4503
+Group:midori
+GID:4503
+Home directory:/home/remoteusers/midori
+Initial password:postroll
+
+2.配置认证客户端：
+配置station2使用station1提供的认证服务。
+
+3.安装安全相关更新：
+考试系统已经配置了yum资源库，该资源库包括本次考试所需更新。
+在station1和station2上完成：
+1）用户适合的命令列出可用户的安全更新并将结果输出到/root/rhsa.txt;注意必须在更新系统前、和完成所有考试后进行。
+2）安装相关安全更新。
+
+4.安装软件包：
+在http://rhgls.domain7.example.com/materials/qtined上已经下载了两个不确定源的服务软件包。这些包都没有签名，每个包的安装都会对station2的用户请求写文档。检查那一个包是安全的并且安装在station2，不安全的包不能安装。
+
+5.创建加密卷：
+在station2上创建加密块设备，有如下要求：
+1）该块设备必须是逻辑卷
+2）该卷的名称必须是wallet
+3）该设备必须属于已经存在的卷组treasure
+4）该设备必须使用treasure的所有可用空间
+5）该设备的加密短语必须是sk0nkw0rkz+
+6）该加密设备应该被格式化为ext4
+7）该设备不需要自动挂载到/private但是挂载点必须创建
+8）该加密文件系统，当挂载在/private时应该包含复制的http://rghls.domain7.example.com/materials/maypreciousss.sh
+
+6.追踪错误登录：
+station1和station2上配置，3次登录失败后锁定帐号3分钟；不管通过SSH还是本地控制台登录都能生效。
+
+7.配置一个日志服务：
+在station1配置日志服务，有如下要求：
+1）station1必须开启远程日志
+2）station2的日志消息存放到/var/log/station2.log中
+
+8.配置日志客户端：
+station2上配置所有日志都发送到station1，所有新日志都不再存放到本地。
+
+9.禁用root通过SSH访问：
+在station1和station2上配置root用户不能登录，但是其他的非root用户必须要能访问。
+
+10.设置密码过期策略：
+设置station2上所有新建的本地用户密码过期（expire）为6天。
+
+11.设置默认权限：
+要求wario用户在station2上创建文件的权限是--w-r-----,创建目录的权限是d-wxr-x---
+
+12.配置软件包的签名检查：
+http://rhgls.domain7.example.com/materials包含及格不同的公共keys，其中有一个可以用来给demo_package签名，软件包demo_package可以在http://rhgls.domain7.example.com/materials/signed.
+根据以下要求在station2给demo_package签名：
+1）用户key签名后的包能用rpm校验
+2）包可以用yum安装
+3）从该资源库中的安装默认使用该key进行签名
+4）除了有效的key外其他的key不能用来签名和检查
+
+13.删除文件：
+删除station2上的/root/removeme.txt文件。
+
+14.查找文件：
+在station1上查找有特殊权限的文件并且将结果保存到/root/specialfiles.txt中。
+
+15.配置入侵检测：
+根据如下要求使用AIDE监控station1
+1）下载文件http://rhgls.domain7.example.com/pub/materials/ex413.cfg到/etc/目录。
+2）AIDE只监控文件/etc/ex413.cfg的权限（permission）和所有权（ownership）的变化。
+3）AIDE的数据库文件放在/etc/lib/aide/aide.db.gz
+
+16.配置文件的访问：
+根据下列要求，在station1下设置/account目录设置权限控制：
+1）原始文件不能修改也不能删除。
+2）即使不在 /etc/fstab 里提供选项，也要求能够实现文件的访问控制 (用 tune2fs 定义默认挂载选项)
+3）文件系统中的目录是/accounting/sales .
+4）目录的属主是 root 属组是 guests .
+5）guests 组对 data 下目前和将来的文件及子目录有所有权限且新建的文件或目录要能继承该权限(设置 acl 和默认 acl ) .
+6）gambit和ororo不使用guests的成员
+7）用户gambit对目录有读和写的权限且新建的文件或目录继承该权限。
+8）除了guests的成员，其他用户不能访问/accounting/sales目录(设置 acl 和默认 acl )。
+
+
+17.配置应用程序：
+在station2上已经安装/usr/local/bin/db_setpass，当一个用户运行该程序时，可以输入一些字符串并且将用户信息和字符串以加密的方式存储到一个文件中，如果不加任何参数将显示一些额外用法信息。
+额外信息（要求）：
+1）db_setpass使用/usr/local/etc/dbusers.dat.如果该文件不存在则将被程序首次运行是创建。
+2）db_setpass和/usr/local/etc/dbusers.dat的属主为dbmgr，属组为dbmgr.
+3）station2上的其他用户能读取/usr/local/etc/dbusers.dat但只有dbmgr和root可以修改或写入。
+4）station2的所有（已有或新建）用户能运行db_setpass且能存储一个密码短语到/usr/local/etc/dbusers.dat
+
+18.审计文件活动（activity）：
+在station2的/root/rockentries.txt设置审计,key :“ex413”,审计的事件read,write,excute,appends；将审计日志发送到station1.
+
+19.配置防火墙：
+根据一下要求，在station1和station2配置防火墙：
+1）所有本地主机的访问都允许
+2）除下列服务外其他都blocked（阻塞）
+（1）所有的主机都可以访问 ipa-server 的 ssh 端口
+（2）所有的主机都可以访问 ipa-server 的 80 端口
+（3）同网段（domain7.example.com）可以访问任意的服务，因这涉及到服务端要收集日志
+
+20.CPU限制:
+在station1上，设置devels组内成员的每个登录会话使用CPU时间为2分钟（minutes）
+
+

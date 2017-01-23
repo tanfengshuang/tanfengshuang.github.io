@@ -1,0 +1,311 @@
+﻿1)Configure Satellite Server
+Configure the satellite server at http://satellite.net1.example.com according to the following requirements:
+	The administrative user is satadmin whose password is set to flectrag
+	In the General Configuration the satellite hostname is set to satellite.net1.example.com
+	The satellite administrator email address is set to root@satellite.net1.example.com
+Do not make any changes to the existing Organization
+
+[Answer]
+设置satellite的用户名和密码在satellite的虚拟机上，考试时一共有三个虚拟机
+登陆之后admin---redhat satellite configure general--填写内容---update--restart
+将satellite的用户名和邮件地址按照题目要求进行填写
+
+2)Configure subscription management
+Install and configure the Satellite Asset Manager service on sam.net1.example.com such that the following conditions exist:
+	The SAM administrative user password is flectrag
+	Enhanced reporting is active
+	Upload the zipped manifest file that is available on your Satellite Server host in the /root directory.
+	Your RHN Satellite Server host satellite.net1.example.com syncs its data to the SAM.
+The SAM installation ISO is available at http://rhgls.net1.example.com/updates/sam-1.3-20131017-rhel-6-x86_64.iso
+
+[Answer]
+第一小项和第二小项：
+安装sam在sam的虚拟机上
+先将sam的ISO文件下载到本地，然后进行挂载并安装
+wget http://rhgls.net1.example.com/updates/sam-1.3-20131017-rhel-6-x86_64.iso
+mount -o loop sam-1.3-20131017-rhel-6-x86_64.iso /mnt
+cd /mnt
+./install_packages --enhanced_reporting
+安装完成后查看mongod服务是否开启，一定要确认该服务是启动状态,
+/etc/init.d/mongod status 
+chkconfig mongod on
+katello-configure --deployment=sam --user-pass=flectrag 安装sam并设置密码为flectrag
+
+第三小项：
+根据题意,在satellite服务器的/root下面有rh401-minimal-manifest.zip方件，用scp命令将/root/rh401-minimal-manifest.zip文件拷贝到sam服务器或者物理机下面都可以，如果是sam服务器上要安装firefox
+scp /root/rh401-minimal-manifest.zip sam.net1.example.com:/tmp/
+打开一个浏览器页面，输入sam虚拟机的主机名进行登陆
+https://sam.net1.example.com/sam
+用户名：admin 密码：flectrag 密码是根据题里的密码进行设置
+登陆页面后点击Subscriptions--Red Hat Subscriptions--Upload New Manifest--Browse找到上传的rh401-minimal-manifest.zip文件进行上传
+
+第四小项：
+第一步：根据题意做同步在sam服务器上生成key：
+su - splice -s /bin/sh -c 'ssh-keygen -t rsa -b 1024 -f /var/lib/splice/id_rsa-sat -N ""' 注意：''是单引号，不是反撇号!!!
+第二步：在satellite服务器上操作生成swreport用户并设置密码：
+	useradd swreport
+	echo flectrag | passwd --stdin swreport
+	usermod -aG apache swreport
+第三步：回到sam服务器
+	ssh-copy-id -i /var/lib/splice/id_rsa-sat.pub swreport@satellite.net1.example.com
+第四步：回到satellite服务器
+	vim /home/swreport/.ssh/authorized_keys 编辑如下内容,该文件下面有内容，不用管，把下面命令添加进去即可
+	command="/usr/bin/spacewalk-report $SSH_ORIGINAL_COMMAND"
+第五步：回到sam服务器
+	su - splice -s /bin/sh
+	s-sh4.1$#ssh -i /var/lib/splice/id_rsa-sat swreport@satellite.net1.example.com 执行完后会进入satellite服务器的swreort用户下，需要退出回到sam服务器
+	vim /etc/splice/checkin.conf 找到如下4个位置编辑如下内容
+	host =satellite.net1.example.com
+	ssh_key_path=/var/lib/splice/id_rsa-sat
+	login=swreport
+	admin_pass=flectrag 密码为katello-configure时输入的密码
+第六步：在sam服务器上进行验证
+	su - splice -s /bin/sh -c spacewalk-splice-checkin
+
+3)Configure channel content
+Your Satellite Server has been pre-configured to provide content for the Red Hat Enterprise Linux 6 Server base channel. Configure your Satellite Server so that it also provides channel content for the following channels:
+	RHN Tools for Red Hat Enterprise Linux 6 Server
+Exported content of the RHN Tools channel is available from http://rhgls.net1.example.com/ex401-materials/rhn_tools_export.tgz
+
+[Answer]
+在satellite server上：
+cd /tmp
+wget http://rhgls.net1.example.com/ex401-materials/rhn_tools_export.tgz
+tar zxvf rhn_tools_export.tgz
+satellite-sync -m rhn_tools_export --list-channels(可以简写成-l) | grep tools 查看有哪些个频道，查看到rhn-tools-rhel-x86-server-6的频道共有21个package
+satellite-sync -m rhn_tools_export -c rhn-tools-rhel-x86-server-6将该频道导入卫星服务器后在channel的主频道下能查看到刚导入的子频道
+
+4)Configure satellite users and groups.
+Create the user accounts and groups listed below on your Satellite Server. All accounts and groups should be created using the default organization for your Satellite Server.
+	A user account named ex401-user. The password for the account should be flectrag. Use the email address for the root user on your satellite host as the email address for this user.
+	The ex401-user account should be able to administer system groups.
+	Create a group called ex401-systems that is administered by ex401-user.
+	
+[Answer]
+Users--> create new user
+Desired Login:ex401-user
+Desired Password:flectrag
+confirm Password:flectrag
+First,Last Name:MR ex401 user
+Email:root@satellite.net1.example.com
+最后create loging创建用户
+
+Users--> ex401-user进入配置界面，给系统管理员权限
+Details--> Roles:system group administrator  submit提交确认
+
+Systems--> System Groups--> create new group叫做ex401-systems
+Name:ex401-systems
+Description:ex401-systems --> create group
+Edit group administrators把上面的ex401-user用户做成新创建的组管理员
+
+5)Configure an Activation Key
+Configure an activation key, called ex401-key that can be used to register systems to your Satellite Server.
+
+[Answer]
+Systems--Activation Keys--create new key
+Description:ex401-key 名字根据题意要求填写，Base Channels：选 Red Hat Enterprise Linux Server(v.6.for64-bit x86_64)，勾选Provisioning，勾选Configuration File Deployment
+最后Create Activation Key--> Update Activation Key
+二级目录Groups--> Join--> 选中ex401-systems--> Join selected Groups
+注意： 做完后面的7,8题配置channel和自定义channel（包括rhn-tools）后把软件频道和配置频道添加到activekey
+即在System--> Activation Keys--> ex401-key--> child channels 选中两个update 
+System--> Activation Keys--> ex401-key--> Configuration--> 选中配置channel即ex401-config
+
+6)Clone an RHN Satellite channel
+Create a customized version of the Red Hat Enterprise Linux channel named rhel-x86_64-server and with a label of the same name. The rhel-x86_64-server channel should be accessible to all systems in your organization and should not include any updated packages. You do not need to replicate any child channels.
+
+[Answer]
+Channels--> Manage Software Channels--> clone channel
+Clone From:Red Hat Enterprise Linux Server(v.6.for64-bit x86_64)
+Clone:选择第二项 Original state of the channel(no errata)
+进入detail页面
+更改channel name和channel label的名字为rhel-x86_64-server，两个名字都是一样，最后create channel和update channel
+
+7)Configure a Custom Channel
+Create a custom software channel on your Satellite Server that meets the following requirements:
+	The channel should be named ex401-channel
+	The channel should be a child channel of the Red Hat Enterprise Linux 6 channel
+	The channel should contain a custom RPM for the foo package. Instructions for building this package are in a separate item.
+
+[Answer]
+Channels--> Manage Software Channels--> create new channel
+channel name:ex401-channel
+Channel Label:ex401-channel
+Parent Channel:选择父频道是之前已有的Red Hat Enterprise Linux 6
+Channel Summary:ex401-channel
+页面上的其它选项都不用填写，create--update即可，在channel下面可以看到redhat enterprise linux server6的频道下面有创建的子频道ex401-channel，记得去Activation Keys下添加
+
+8)Create a Configuration Channel
+Obtain a copy of the file http://rhgls.net1.example.com/ex401-materials/configuration/index.html Do not change the content of this file.
+Create a configuration channel on your Satellite Server named ex401-config that provides this file. The file should deploy on channel clients in the /var/www/html directory.
+
+[Answer]
+使用物理主机将给出的地址文件wget下来
+打开页面：Configuration--> Configuration Channels--> create new config channel
+Name:ex401-config
+Label:ex401-config
+Description:ex401-config
+创建完成后进入Add Files--> Upload File
+FIle to Upload:将物理机下载下来的index.html页面进行上传
+Filename/Path:/var/www/html/index.html 路径是题里给出的
+剩下的选项不用更改，确认即可Upload Configuration File，上传后会有其它选项出现，不用管,记得去Activation Keys下添加
+
+9)Configure SVN
+Create an SVN repository on your satellite host according to the following requirements:
+	Export the contents of the SVN repository at http://rhgls.net1.example.com/svn/repo to a working directory on your satellite host.
+	Create an SVN repository on your satellite host named /var/examrepo. Import the contents of the EX401/trunk directory from the working directory you created in the prior step into this repository.
+	The users clem and pierson should be able to check files out of the repository, make modifications to those files (including adding new files or deleting existing files) and check the changes back into the repository. The user strobe should not have any access to the repository. The password for all users is flectrag.
+	When testing your repository, do not delete or otherwise alter the repository file file0.
+
+[Answer]
+yum install subversion -y
+svnadmin create /var/examrepo
+groupadd -g 80000 svnuser
+chgrp -R svnuser /var/examrepo
+chmod -R 2770 /var/examrepo/db
+usermod -aG svnuser clem
+usermod -aG svnuser pierson
+su - clem 切到相关用户操作
+vi .bash_profile 最后一行添加export EDITOR=vi
+svn co http://rhgls.net1.example.com/svn/repo
+cd repo        
+svn import EX401/trunk  -m “import” file:///var/examrepo/EX401/trunk
+su - pierson
+vi .bash_profile 最后一行添加export EDITOR=vi
+svn co file:///var/examrepo
+su – strobe
+svn checkout file:///var/examrepo 测试一下strobe用户是否能checkout
+
+10)Build a custom RPM
+On your satellite machine, build a custom RPM for an existing application. The source code to build your custom RPM can be found at http://rhgls.net1.example.com/ex401-materials/foo-1.0.tar.gz. This archive contains source code, a shell script,and a configuration file. Your RPM should do the following:
+
+Place a copy of the RPM in /root/RPMS/ and name it /root/RPMS/foo-VERS.RELEASE-ARCH.rpm where VERS.RELEASE and ARCH are set appropriately. Please ensure that only the final version of your RPM package is in this directory and that it is named as specified.
+Source RPMS are available at http://rhgls.net1.example.com/ex401-materials/SRPMS.
+	Place the configuration file in /etc, the shell script in /bin, and the compiled binary executable and library in /usr/bin and /usr/lib respectively,
+	Set the package to the Applications/Internet group
+	Have a requisite of the pam package
+	Flag the configuration file, placed in /etc, as a configuration file in the installed database record for the RPM.
+
+[Answer]
+mkdir -p /root/RPMS
+yum install gcc –y    安装编译环境
+从http://rhgls.net1.example.com/ex401-materials/SRPMS中wget一个rpm包，
+rpm -ivh *.rpm 安装一个SRPMS下载下来的包，/root目录下会产生rpmbuild目录；  
+下载foo-1.0.tar.gz源码包，放到rpmbuild/SOURCE目录
+cd /root/rpmbuild/SOURCE
+wget http://rhgls.net1.example.com/ex401-materials/foo-1.0.tar.gz
+
+复制rpmbuild/SPEC/*.spec 为foo.spec并编辑   
+内容如下：
+Summary: Foo
+Name: foo
+Version: 1.0
+Release: 1
+License: GPL
+URL: http://rhs.exapmle.com/rpm
+Group: Applications/Internet group 根据题目填写
+Source: %{name}-%{version}.tar.gz
+BuildRoot: %{_tmppath}/%{name}-buildroot
+PreReq: pam
+
+%description
+foo package
+%prep
+%setup -q
+%build
+make
+%install
+rm -rf $RPM_BUILD_ROOT
+mkdir -p $RPM_BUILD_ROOT/etc
+mkdir -p $RPM_BUILD_ROOT/bin
+mkdir -p $RPM_BUILD_ROOT/usr/bin
+mkdir -p $RPM_BUILD_ROOT/usr/lib
+install libfoo.so.1.0 $RPM_BUILD_ROOT/usr/lib
+install foo           $RPM_BUILD_ROOT/usr/bin
+install foo.conf      $RPM_BUILD_ROOT/etc
+install foo.sh        $RPM_BUILD_ROOT/bin
+%clean
+make clean
+rm -rf $RPM_BUILD_ROOT
+%post
+ln -sf /usr/lib/libfoo.so.1.0 /usr/lib/libfoo.so.1
+ln -sf /usr/lib/libfoo.so.1   /usr/lib/libfoo.so
+ldconfig
+%files
+%defattr(-, root, root,-)
+%config /etc/foo.conf
+/bin/foo.sh
+/usr/bin/foo
+/usr/lib/libfoo.so.1.0
+
+%changelog
+* Sat Oct 18 2014 grady shen <grady.shen@outlook.com> 
+- First build
+
+保存退出后，执行命令创建rpm包 
+rpmbuild -ba foo.spec
+cp /root/rpmbuild/RPMS/x86_64/foo-1.0-1.x86_64.rpm /root/RPMS
+
+检测：
+cd /root/rpmbuild/RPMS/x86_64
+执行:rpm -qpl foo-1.0-1.x86_64.rpm
+/bin/foo.sh
+/etc/foo.conf
+/usr/bin/foo
+/usr/bin/foo.sh
+/usr/lib/libfoo.so.1.0
+/usr/lib64/libfoo.so.1.0
+/usr/share/doc/foo-1.0
+/usr/share/doc/foo-1.0/README
+rpm -ivh foo-1.0-1.x86_64.rpm
+
+
+11.Upload a custom RPM to your RHN satellite server 将创建的RPM包上传到指定的频道内
+Upload the foo RPM you created in a separate item to the ex401-channel on your Satellite Server.
+
+[Answer]
+rhnpush --server=satellite.realm1.example.com -c ex401-channel foo-1.0-1.noarch.rpm --nosig 
+指定上传的rhn服务器，-c指定上传的频道名后面跟上要上传的文件，--nosig是因为上传的package没有经过签名
+
+12.Configure satellite kickstarts 创建kickstart
+Create a kickstart profile on your Satellite Server named ex401-kickstart. The kickstart should:
+	Use default download location
+	Use the latest release of Red Hat Enterprise Linux 6 Server available on your Satellite Server,
+	Configure network interfaces to request DHCP settings,
+	Install the dialog package and install the following software groups:
+Web server
+Console internet tools
+Development tools
+	Set the root password to flectrag,
+	Automatically register with your RHN Satellite Server and place the installed system in the ex401-systems group,
+	Automatically retrieve and install default available updates and the software packages from your custom ex401-channel channel,
+	The kickstarted client should start the httpd service and serve the index.html file from your Satellite Server's ex401-config channel. Do not make changes to the content of this file.
+In order for you to complete this item, your client VM has been preconfigured with a PXE boot menu option to allow you to boot and launch a kickstart install. In order to perform the exam kickstart installation reboot your client and select the Install Exam Client option from the PXE boot menu.
+
+[Answer]
+用satadmin登录 --> system --> kickstarts --> Create Kickstart Profile 按要求操作
+Label:ex401-kickstart --> next 默认选项 --> Root Password 设置成flectrag，finish
+进入ex401-kickstart --> software --> package groups
+@ Base
+@ Web server
+@ Console internet tools
+@ Development tools
+dialog
+
+Kickstart Details--> Operating System 勾选 ex401-channel和rhn-tools-rhel-x86_64-server-6
+Scripts--> add new kickstart script 
+需要注意的是scripts的编写：
+选/bin/sh
+/etc/init.d/httpd start
+chkconfig httpd on
+yum update -y
+rhncfg-client get     目的是获取配置频道/var/www/html文件
+yum install foo -y --nogpgcheck
+
+**下面选项选post script
+
+注意检查Activation Keys 选中 ex401-key
+groups 检查key
+
+重启client 选第三项 Install EXAM SYSTEM 安装操作系统
+检查httpd 是否开机启动，/var/www/html下是否有index.html存在，foo rpm包是否有安装。
+否则按照题目要求修改相关文件或服务。

@@ -1,0 +1,279 @@
+先配置yum
+
+1.识别硬件特性:
+/root/dmidecode.out 是在另外一台系统上运行 dmidecode 输出的文件。使用这个文件识别 CPU 的 L1 和 L2 的缓存大小,在你的系统上可以直接打开该文件,如果输出的信息包括多个 processors(进程)或多个 cores(核心),回答问题是你应该回答 single(单个)processor 或 core 的。
+注意:填写好值后点击“submit answers”提交答案。
+【答案】：
+vi /root/demidcode.out
+搜cpu 查看cpu核数
+-----Core Count: 2
+查看一级二级缓存总数：
+-----
+Configuration: Enabled, Not Socketed, Level 1
+        Operational Mode: Write Back
+        Location: Internal
+        Installed Size: 128 kB
+        Maximum Size: 128 kB
+Configuration: Enabled, Not Socketed, Level 2
+        Operational Mode: Varies With Memory Address
+        Location: Internal
+        Installed Size: 6144 kB
+        Maximum Size: 6144 kB
+
+L1=128
+L2=6144   除于cpu核数就是答案  分别为63 3072
+
+2.分析 sar 输出文件:
+在 root 家目录下的 sar.data 记录了另外一个系统在一段时间运行的数据。使用这个文件回答下列问题, 提示:这个文件中收集了包括 LVM 逻辑卷的信息,你应该忽略 LVM,且只提供物理卷的值。
+1)统计该文件中的最大进程数(process count)?
+2)那个设备的 write(写) I/O 速率最高(填写设备名应该是 sdx 或 devX-XX 的形式)?
+3)这个设备最大的 I/O 速率是多大,单位 kiB/s?
+4)磁盘读写的最大并发(burst)发生在什么时间?
+填写值后点击“submit answers”提交答案。
+【答案】：
+(1).sar -q -f sar.data  |awk '{print $4}'|sort -rn |more   最大的数值  801
+
+(2).sar -d -p -f sar.data  |more |awk '{print $5}' |sort  -nr |more ----- 131232.06        rd_sec/s
+    sar -d -p -f sar.data  |more |awk '{print $3,$5}' > /tmp/a
+    vi /tmp/a 查找数值为131232.06的设备  为sdb
+
+(3).32.06/2=65600 取最近100        rd_sec/s / 2
+(4).sar -b  -f sar.data  |more 仔细查看最后一列bwrtn/s  看在哪儿个时间变化最大
+
+3.识别系统调用:
+识别“/bin/dumpkeys”命令最频繁的系统调用。
+【答案】：
+strace -fc -S calls /bin/dumpkeys
+查看calls 找数值最大到那个  3435--ioctl
+
+4.给程序设置内存分配限制:
+配置“/usr/local/bin/greedy”运行时提示:unable to allocate memory;
+配置“/usr/local/bin/checklimit”运行是提示:success:address space limit is okay.
+【答案】：
+sysctl -a |grep overcommit
+echo vm.overcommit_memory = 2 >>/etc/sysctl.conf
+sysctl -p
+
+5.配置共享内存:
+配置 SYSV 共享内存,允许应用程序只能使用在 1GiB 到 1.5GiB 之间,且设置重启后依然存在。
+【答案】：
+vi /etc/sysctl.conf
+kernel.shmmax = 1395864371 ---1.3*1024*1024*1024
+
+6.配置进程优先级:
+在/usr/local/bin 中,有一个应用程序 realtime。配置系统使得该程序在系统启动的时候自动
+运行,具有静态优先级 27--使用(round roubin priority scheduling).该程序应该作为后台作
+业运行。您可以通过查看/var/log/messages 来验证 realtime 是否运行。
+【答案】：
+vi /etc/rc.local
+chrt -r 27 /usr/local/bin/realtime &
+检查
+#pidof /usr/local/bin/realtime
+#chrt -pp  PID
+
+7.确定 realtime 应用程序实际使用内存的大小,以页为单位。使用问题提交表单来记录下你
+的答案。
+【答案】：
+重启机器后
+ps axo pid,rss| grep 2641
+rss/4 = 163
+
+8.在/root 的目录下有文件 count_jiffies.stp。配置系统能够运行这个脚本。
+【答案】：
+yum -y install systemtap
+yum -y install kernel-debuginfo*
+debuginfo--install kernel
+stap /root/count_jiffies.stp
+
+9.root 账号的目录两个版本的应用程序: cache-a 和 cache-b。两个版本的应用程序功能一样,但是其中一个在使用缓存方面不合理。确认哪个应用程序有更好的缓存性能并复制这个程序到/usr/local/bin.
+【答案】：
+yum -y install valgrind
+valgrind --tool=cachegrind /root/cache-a
+valgrind --tool=cachegrind /root/cache-b
+在结果中对比可得到cache-b
+cp -av cache-b /usr/local/bin
+
+10.配置网络缓存使得每个 UDP 连接(输入、输出都包括),保证能有最小 128KiB 最大 192KiB缓存。
+【答案】：
+vi /etc/sysctl.conf
+net.core.rmem_max = 196608
+net.core.wmem_max = 196608
+net.core.rmem_default = 131072
+net.core.wmem_default = 131072
+net.ipv4.udp_rmem_min = 131072
+net.ipv4.udp_wmem_min = 131072
+
+sysctl -p
+
+11.配置 sar 数据收集脚本每 3 分钟间隔运行一次。
+【答案】：
+vi /etc/cron.d/sysstat
+*/2 * * * * root /usr/lib64/sa/sa1 1 1
+
+12.系统应该有 2048MB 的交换分区。配置足够的交换空间并满足如下要求:
+1)不删除任何现存的 swap 分区
+2)额外的 swap 空间应该均匀分布在两个分区上(同等大小)
+3)新的 swap 分区应该在开机启动时被挂载
+4)在引导时,内核应该在使用现存的 swap 之前,使用新的 swap 分区
+【答案】：
+fdisk /dev/vda
+n
+e
+4
+n
+l
+5
++768M
+n
+l
+6
++768M
+w
+
+partx -a /dev/vda
+mkswap /dev/vda5
+mkswap /dev/vda6
+swapon /dev/vda5
+swapon /dev/vda6
+vi /etc/fstab
+dev/vda6   swap    swap    defaults,pri=5  0 0
+moumt -a
+用free -m 查看下是否为2048M
+
+13.这个系统和其他系统之间绝大多数网络连接都将经由一个低地轨道卫星链路。连接的延
+迟为 500ms,宽带为 1.5.Mib/s(mebibits/second).调整系统使得所有的 TCP 连接都能:
+1)用于缓存每个连接的内存的最小值,足够使用于这个延迟以及带宽。
+2)用于缓存每个连接的内存的缺省值,等于用于缓存的内存的最小值。
+3)用于缓存每个连接的内存的最大值,等于 1.5 倍用于缓存内存的最小值。
+【答案】：
+sysctl -a | grep tcp|grep mem
+vi /etc/sysctl.conf
+net.ipv4.tcp_wmem = 98304 98304 147456 --------- 0.5*1.5/8*2^20
+net.ipv4.tcp_rmem = 98304 98304 147456
+
+sysctl -p
+
+14.在/usr/local/bin 目录有两个程序:memapp1 和 memapp2.用户 memhog 应该能够运行memapp1 但是不能运行 memapp2 或者其他任何具有和 memapp2 一样特征的应用程序。
+【答案】：
+/usr/local/bin/memapp1
+/usr/local/bin/memapp2
+获取结果4096 8072  取中间值6000即可
+vi /etc/secutity/limits.conf
+memhog hard as 24000
+
+15.配置系统使得已经被修改的数据能够在被考虑写入磁盘前,在内存保留 45 秒(seconds)。
+【答案】：
+sysctl -a | grep expire
+echo "vm.dirty_expire_centisecs = 6000" >>/etc/sysctl.conf
+sysctl -p
+
+16.在 root 目录中有一个压缩包,名为 application.tgz 包含了一个客户端-服务器应用程序。
+该文件包含了两个版本的服务器应用程序,是 server-v1 和 server-v2,以及一个客户端应用程序 client。这些程序都被设计为在同一个系统上使用。
+客户应用程序能够接受键盘输入并且发送到服务器,输入 ctrl+D,将结束客户端程序。两个版本的服务器应用程序做的事情一样;他们接受客户端的输入并且复制到文件/tmp/application.out.
+一旦进入生产环节,服务器应用程序并且识别最佳的那个服务器应用程序。一旦您决定使用某个版本的服务器应用程序,复制您选择的那个应用程序到/usr/local/bin.
+【答案】：
+tar zxvf  application.tgz
+开三个窗口  一个监视：watch -n0 "cat /proc/meminfo |grep -i commit"
+一个运行server-v1和server-v2
+一个运行client
+查看Committed_AS:     326284 kB   的状态，取变化小的（不变化的
+cp server-v1 /usr/local/bin/
+
+17.配置内核模块:
+系统要升级硬件了,是 SCSI 控制器和一个 SCSI 磁带备份设备。请确保 SCSI 磁带控制器模块(st.ko)的加载,缺省缓存大小需要设置为 24Kib。
+【答案】：
+vi /etc/modprobe.d/st.conf
+options st buffer_kbs=128
+vi /etc/sysconfig/modules/st.modules
+modprobe st
+chmod a+x /etc/sysconfig/modules/st.modules
+modprobe st
+检测cat /sys/bus/scsi/drivers/st/fixed_buffer_size
+
+18.配置调度:
+你想要的大部分磁盘 I/O 在执行主要应用程序运行在虚拟机系统时,需要等待时间不超过担保额的 I/O 请求服务。
+创建 exam 的调度配置文件:
+设置给你的虚拟系统的 root 文件系统设置一个合适的默认的 I/0 scheduler;
+你可以考虑为 exam 设置一个实际的物理设备的驱动。
+该配置应当设置为开机自动生效。
+【答案】：
+yum -y install tuned
+cd /etc/tune-profile
+cp -a default 	performance
+
+cd performance
+vi ktune.sysconf
+ELEVATOR="deadline"
+ELEVATOR_TUNE_DEVS="/sys/block/vda/queue/scheduler"
+
+tuned-adm list
+tuned-adm profile performance
+
+19.配置 cgroup:配置名为 power 的 cgroup slice,有如下要求:
+1)该 slice 应该限制 cpu share 为 1024 和内存为 1024M
+2)重启系统时确保 httpd 服务运行在 power slice
+【答案】：
+yum -y install libconfig
+chkconfig cgconfig on
+chkconfig cgred on
+vi /etc/cgconfig.conf
+group torch{
+        cpuacct{
+        }
+}
+
+vi /etc/cgrules.conf
+johnny:*        cpuacct         torch/
+
+service cgred restart
+service cgconfig restart
+
+20.分析预先录制好的活动:
+文件/root/.pcp/pmlogger/20141231.06.00.01.folio 包含了在生产服务器的一个小时的预先记录的系统活动。
+在 40 分钟和 58 秒附近有突然爆发的 I/O 活动。分析数据并回答下列问题:
+1)那个设备是网络附加存储设备?
+2)I/O 活动的方向是什么?
+3)哪个设备有最高的写 I/0 吞吐量?
+【答案】：
+yum -y install rrdtool httpd
+
+vi /root/grapher.sh
+#!/bin/bash
+
+rrdtool graph /var/www/html/traffic.png \
+--start=$(date --date="2011-11-8 00:00:00" +%s) --end=$(date --date="2011-11-9 00:00:00" +%s) \
+DEF:80_in=/root/tcp_udp_services.rrd:80_in:AVERAGE \
+DEF:80_out=/root/tcp_udp_services.rrd:80_out:AVERAGE \
+DEF:993_in=/root/tcp_udp_services.rrd:993_in:AVERAGE \
+DEF:993_out=/root/tcp_udp_services.rrd:993_out:AVERAGE \
+DEF:53_in=/root/tcp_udp_services.rrd:53_in:AVERAGE \
+DEF:53_out=/root/tcp_udp_services.rrd:53_out:AVERAGE \
+LINE1:80_in#0000FF:80_in \
+LINE1:80_out#000088:80_out \
+LINE1:993_in#00FF00:993_in \
+LINE1:993_in#008800:993_out \
+LINE1:53_in#FF0000:53_in \
+LINE1:53_out#880000:53_out \
+
+sh /root/grapher.sh
+
+21.系统将要运行一个应用程序需要分配一个 64MiB 段共享内存,配置系统使得对于这个应用程序来说,TLB flushes 将会最少。该配置需要在重启之前被保留下来。
+在/root 目录中,有两个版本的这个程序。程序 hugepage.shm 使用了 SYSV 共享内存来配置64MiB 段的内存。应用程序 hugpages.fs 使用了伪文件系统来处理内存分配。
+您只需要配置您的系统来支持其中一个应用程序,而不是两个程序都支持。您仅需要将配置为系统支持的那个应用程序复制到/usr/local/bin 目录。
+如果您打算支持 hugepages.fs 应用程序,伪文件系统需要被挂载在/bigpages 下。该文件系统应该是在系统重启后自动挂载。当运行 hugepages.fs 应用程序的时候,您将会被提示输入伪文件系统挂载点下的一个文件名字,可以用文件/bigpages/memory.
+两个应用程序在分配共享内存后都会暂停,并且提示您继续--如果您觉得一切都准备好了的话即可。
+您可以通过这种方式来检查在应用程序运行时候系统能够正确分配内存。
+【答案】：
+ cat /proc/meminfo | grep -i huge
+查看hugepage页大小
+Hugepagesize:       2048 kB
+vi /etc/sysctl.conf
+vm.nr_hugepage = 32
+sysctl -p
+mkdir /bigpages
+vi /etc/fstab
+none /bigpages hugetlbfs defaults 0 0
+mount -a
+./hugepages.fs
+--------------------------memory
+cp -av hugepage.fs /usr/local/bin/

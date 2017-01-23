@@ -1,0 +1,126 @@
+1.安装RHEV-M:
+在rhel.domain1.example.com上安装RHEV-M，该系统已经配置好了你需要yum源。
+根据如下要求配置RHEV-M：
+1）主机的FQDN为rhel.domain1.example.com
+2）所有的密码使用postro119
+3）组织名称为domain1
+4）不配置NFS的导出
+5）RHEV-M能被domain1.example.com域的所有主机访问
+
+yum -y update
+reboot
+cd /etc/yum.repos.d/
+wget http://classroom.example.com/materials/rhevm.repo
+yum -y install rhevm
+engine-setup --help |grep answer
+engine-setup --generate-answer=answer.txt
+-->YES-->YES-->NO-->FQDN--local-->automatic-->密码-->both-->第三问-->NO-->NO
+使用浏览器登录：admin密码postro119
+
+2.RHEVM配置支持IPA认证服务：
+主机host.domain1.example.com已经配置了IPA认证服务，你需要rhevm使用IPA认证服务，管理员rhevadmin的密码是postro119.
+engine-manage-domains --help
+engine-manage-domains add --domain=example.com --provider=ipa --user=rhevadmin  ##密码postro119
+service ovirt-engine restart
+
+3.配置数据中心：
+配置RHEV-M的数据中心exam1，集群cluster1支持64为os，数据中心存储类型为Shared，数据中心使用的资源：
+1）ISCSI数据域的名为data，target是有host.doamin1.example.com导出的；
+2）NFS ISO域的名为iso，使用的是host.domain1.example.com:/exports路径的NFS导出。
+
+浏览器：admin登录
+新建数据中心--》新建cluster--》注意cpu的类型
+将主机设置为维护模式-->编辑修数据中心和集群
+RHEVM上修改：(考试不需要）
+vi /etc/tgt/targets.conf #允许rhevh访问
+initiator-address 172.25.253.1
+:wq
+service tgtd restart
+浏览器中登录
+storage-->新建存储域
+在rhevm上搭建nfs：考试时不用管
+mkdir /exports
+chown vdsm:kvm /exports
+vi /etc/exports
+/exports *(rw,sync,no_root_squash)
+service nfs restart
+chkconfig nfs on
+chmod 777 /exports
+浏览器新建ISO域
+
+4.配置hypervisor：
+根据如下要求配置RHEV-H:
+1）管理员密码是postro119
+2）主机名hypervisor.domain1.example.com
+3）对虚拟机或是虚拟机池，不需要配置power management。
+
+在serverb上完成：
+cd /etc/yum.repos.d/
+wget  下载repo
+yum -y install vdsm
+新加主机
+
+5.配置数据中心支持VM安装（上传ISO镜像）：
+使用/net/host.doamin1.example.com/var/ftp/pub/目录下的ISO镜像，配置数据中心支持安装RHEL系统。
+
+在RHEVM上：
+cd  /net/host.domain1.example.com/var/ftp/pub  #存放有iso镜像
+wget 下载iso   ##练习时
+engine-iso-uploader -i iso upload rhel-server-*
+
+6.配置RHEVM用户：
+根据如下要求配置RHEVM的用户：
+1）Angeline能以power user登录RHEVM管理控制台；
+2）Arthur能登录RHEVM的user portal并且还能启动和登录虚拟机桌面系统。
+点击configure-->add system permission
+angeline-->PowerUserRole权限
+arthur-->UserRole权限
+
+7.配置RHEVM用户角色：
+用户Angeline使用名为TEMPMGR（有模板管理的所有权限）的权限管理虚拟机的模板。
+
+新建角色TEMPMGR-->勾选全部的templets的权限
+然后将角色授权给angeline
+
+8.配置虚拟机系统的MAC地址：
+配置RHEV-M中虚拟机网卡的MAC地址：AA:BB:CC:01:01:01-AA:BB:CC:01:01:09
+如果配置正确虚拟机的ip地址应该在172.24.1.1-172.24.1.9的范围。
+
+engine-config -a |grep -i mac
+engine-config -s MacPoolRanges=xx:xx:xx...  - xx:xx:xx...
+service ovirt-engine restart
+
+9.配置VM虚拟机：
+使用exam1数据中心，创建并安装RHserver，
+有如下要求：
+1）系统应该安装Red Hat Enterprise Linux
+2）系统应该有5G磁盘
+3）系统应该有512M内存
+4）系统应该是运行的（up and running）
+5）系统应该使用kickstart文件http://172.24.1.254/small.cfg进行安装，root密码RedHat63
+kickstart进行安装的用法：
+1）像正常安装一样开启VM
+2）当你看到初始界面，等到安装或升级界面出现，按下tab键
+3）编辑如vmlinuz initrd.img ks=http://172.24.1.254/small.cfg，并且回车进行安装
+
+virtual machines-->新建虚拟机
+磁盘thin模式
+添加网卡：
+开机安装：tab
+ks=http://classroom.example.com/pub/materials/small.cfg进行安装
+
+10.创建快照：
+给RHserver创建快照，快照的描述必须是：RHEL Snapshot 1
+
+关闭虚拟机--》新建快照RHEL Snapshot 1
+
+11.创建虚拟机的池：
+在RHEVM上使用VM创建虚拟机池RHpool，有如下要求：
+1）虚拟机池中包含3个VM
+2）使用集群cluster1/exam1
+3）用户rheluser1能访问到池中的虚拟机（给角色VmPoolAdmin）
+
+新建模板rhel6.5_template(题目中没有要求)
+新建池
+授权用户访问池
+
