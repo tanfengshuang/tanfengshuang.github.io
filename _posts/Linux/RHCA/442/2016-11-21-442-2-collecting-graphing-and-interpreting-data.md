@@ -654,18 +654,6 @@ Average:        all      0.02      0.00      0.01      0.00      0.01     99.95
 
 ### Using awk to Format Data
 
-
-```
-# awk -F : '{print $1}' /etc/passwd
-# df | awk '{print $1,$5,$6}'
-# awk -F : '{print $1,$3}' /etc/passwd
-# awk -F : 'NR==1 {print $1,$3}' /etc/passwd
-# awk -F : 'NR<=10 {print NR,$1,$3}' /etc/passwd
-# awk -F : 'NR<=10 && NR>=5 {print NR,$1,$3}' /etc/passwd
-# awk -F : 'NR<=5 || NR>=40 {print NR,$1,$3}' /etc/passwd
-# awk -F : '{print $0,NF}' /etc/passwd				
-```
-
 > NR: 行号
 
 > $0: 整行
@@ -677,42 +665,82 @@ Average:        all      0.02      0.00      0.01      0.00      0.01     99.95
 abc$	-> 以abc结尾
 
 ```
+# awk -F : '{print $1}' /etc/passwd
+# df | awk '{print $1,$5,$6}'
+# awk -F : '{print $1,$3}' /etc/passwd
+# awk -F : 'NR==1 {print $1,$3}' /etc/passwd
+# awk -F : 'NR<=10 {print NR,$1,$3}' /etc/passwd
+# awk -F : 'NR<=10 && NR>=5 {print NR,$1,$3}' /etc/passwd
+# awk -F : 'NR<=5 || NR>=40 {print NR,$1,$3}' /etc/passwd
+# awk -F : '{print $0,NF}' /etc/passwd		
+
 # awk '/^Ave/{print $0}' /file1
+Average:            0       142      0.05      0.03      0.05
+
 # awk -F : '$1 ~ /^r/ {print $0}' /etc/passwd	-> ~: 匹配
+root:x:0:0:root:/root:/bin/bash
+rpc:x:32:32:Rpcbind Daemon:/var/cache/rpcbind:/sbin/nologin
+rpcuser:x:29:29:RPC Service User:/var/lib/nfs:/sbin/nologin
+
 # awk '/^r/ {print $0}' /etc/passwd
 root:x:0:0:root:/root:/bin/bash
 rpc:x:32:32:Rpcbind Daemon:/var/cache/rpcbind:/sbin/nologin
-rtkit:x:499:497:RealtimeKit:/proc:/sbin/nologin
 rpcuser:x:29:29:RPC Service User:/var/lib/nfs:/sbin/nologin
-radvd:x:75:75:radvd user:/:/sbin/nologin
-```
 
-```
+# LANG=C sar -q 1 10 > /file1
 # awk '^${print $0}' /file1	-> 空行
 # awk '^ ${print $0}' /file1	-> 有一个空格的行
 # awk '^ +${print $0}' /file1	-> 有至少一个空格的行，+表示至少有一个
-# awk '/^[^a-zA-Z]+$/ {print $1, $(NF-2), $(NF-1), $NF}' /file1
-```
-
-```
-# LANG=c sar -q 1 3 > /file1
 # awk '{print $1,$4,$5,$6}' /file1
-# awk '/^16/{print $0}' /file1
-16:27:14      runq-sz  plist-sz   ldavg-1   ldavg-5  ldavg-15
-16:27:15            2       834      1.05      1.09      1.08
-16:27:16            6       834      1.05      1.09      1.08
-16:27:17            3       834      1.05      1.09      1.08
+# awk '/^16/{print $0}' /file1	
 
-[[/file1:]]
-Linux 2.6.32-504.el6.x86_64 (dhcp-129-221.nay.redhat.com)       03/08/16
-_x86_64_        (8 CPU)
 
-16:27:14      runq-sz  plist-sz   ldavg-1   ldavg-5  ldavg-15
-16:27:15            2       834      1.05      1.09      1.08
-16:27:16            6       834      1.05      1.09      1.08
-16:27:17            3       834      1.05      1.09      1.08
-Average:            4       834      1.05      1.09      1.08
+# LANG=C sar -q 1 10 > /file1
+# cat /file1 
+Linux 2.6.32-642.el6.x86_64 (cloud-qe-16-vm-02.idmqe.lab.eng.bos.redhat.com) 	01/25/17 	_x86_64_	(2 CPU)
+
+03:39:48      runq-sz  plist-sz   ldavg-1   ldavg-5  ldavg-15
+03:39:49            0       142      0.01      0.02      0.05
+03:39:50            0       142      0.01      0.02      0.05
+03:39:51            0       142      0.01      0.02      0.05
+03:39:52            0       142      0.01      0.02      0.05
+03:39:53            0       142      0.01      0.02      0.05
+03:39:54            0       142      0.09      0.04      0.05
+03:39:55            0       142      0.09      0.04      0.05
+03:39:56            0       142      0.09      0.04      0.05
+03:39:57            0       142      0.09      0.04      0.05
+03:39:58            0       142      0.09      0.04      0.05
+Average:            0       142      0.05      0.03      0.05
+
+# awk '/^[^a-zA-Z]+$/ {print $1, $(NF-2), $(NF-1), $NF}' /file1
+03:39:49 0.01 0.02 0.05
+03:39:50 0.01 0.02 0.05
+03:39:51 0.01 0.02 0.05
+03:39:52 0.01 0.02 0.05
+03:39:53 0.01 0.02 0.05
+03:39:54 0.09 0.04 0.05
+03:39:55 0.09 0.04 0.05
+03:39:56 0.09 0.04 0.05
+03:39:57 0.09 0.04 0.05
+03:39:58 0.09 0.04 0.05
 ```
+
+```
+# grep '^rt' /etc/passwd
+# grep 'bash$' /etc/passwd
+# grep 'r.k' /etc/passwd
+# grep '^r.k' /etc/passwd
+# grep '^r..k' /etc/passwd
+# grep '^r[adber]' /etc/passwd
+# grep '^r[a-z]' /etc/passwd
+# grep '^r[a-z][a-z]' /etc/passwd
+# grep '^r[a-zA-Z0-9]' /etc/passwd
+# grep '^r[^a-z]' /etc/passwd
+# grep '^r[^a-zA-Z0-9]' /etc/passwd
+# grep '^a.*' /etc/passwd
+# grep '^a.*bash$' /etc/passwd
+```
+
 
 ### Plotting Data
 
@@ -721,19 +749,18 @@ Average:            4       834      1.05      1.09      1.08
 ```
 # yum -y install gnuplot
 
-# LANG=c sar -q -f /var/log/sa/sa22 > /file1
+# LANG=C sar -q -f /var/log/sa/sa22 > /file1
 # awk '/^[^a-zA-Z]+$/ {print $1, $(NF-2), $(NF-1), $NF}' /file1 > /file2
 
 # vim /file.gnuplot
-sed xdata time
-sed timefmt "%H:%M:%S"
-set format "%H:%M:%S"
+set xdata time
+set timefmt "%H:%M:%S"
+set format x "%H:%M:%S"
 set xlabel "Time"
 set ylabel "Load Average"
 set terminal png size 1024,768
 set output "/tmp/file.png"
 plot '/file2' using 1:2 title "1-load" with lines, '/file2' using 1:3 title "5-load" with lines, '/file2' using 1:4 title "15-load" with lines
-
 
 # gnuplot -persist /file.gnuplot
 # eog /tmp/file.png
@@ -741,47 +768,99 @@ plot '/file2' using 1:2 title "1-load" with lines, '/file2' using 1:3 title "5-l
 
 ###### Plotting Data with RRDtool
 
-PDP
+*    PDP(Primary Data Points)
+*    CDP(Consolidation Data Point),RRDtool工具中 使用多个 PDP 合并为（计算出）一个 CDP。也就是执行合并统计功能操作后的结果。这个值就是存入 RRA(round robin archive) 的数据，绘图时使用的也是这些数据。
 
-CDP
-
---step=60
-
-rrdtool create xxx.rrd
-
-rrdtool update
-
-rrdtool graph xxx
+1. rrdtool create xxx.rrd (--step=60)
+2. rrdtool update
+3. rrdtool graph xxx
 
 ```
+# yum install -y rrdtool
+
+# uptime
+ 04:12:32 up 5 days,  1:22,  3 users,  load average: 0.06, 0.03, 0.05
+ 
 # rrdtool create /tmp/loadave.rrd --step=10 DS:1_min_load_average:GAUGE:30:0:U RRA:AVERAGE:0.5:2:60
 # rrdtool update /tmp/loadave.rrd $(date +%s):$(uptime | awk '{print $(NF-2)}' | sed 's/,//')
 # rrdtool graph /var/www/html/load_average_hour.png -X 0 --start=$(date --date=-1hour +%s) --end=$(date +%s) DEF:v_1_min=/tmp/loadave.rrd:1_min_load_average:AVERAGE LINE=v_1_min#000000:"1-min-load"
+
+
+# rrdtool -h
+RRDtool 1.3.8  Copyright 1997-2009 by Tobias Oetiker <tobi@oetiker.ch>
+               Compiled Feb 20 2014 11:59:48
+Usage: rrdtool [options] command command_options
+
+Valid commands: create, update, updatev, graph, graphv,  dump, restore,
+		last, lastupdate, first, info, fetch, tune,
+		resize, xport
+
+RRDtool is distributed under the Terms of the GNU General
+Public License Version 2. (www.gnu.org/copyleft/gpl.html)
+
+For more information read the RRD manpages
+
+# rrdtool lastupdate /tmp/loadave.rrd
+# rrdtool info /tmp/loadave.rrd
 ```
 
-RRA round robin archive
-
-DS:5_min_load_average:GAUGE:30:0:U
 
 ```
+[Question]: 
+The first tool you want to create is a round-robin database of the one, five and fifteen minutes load averages on a system.
+
+In order to create this tool you will need the following:
+    A round-robin database storing one minute averages for the last 60 minutes, one data point per minute.
+    The same data stored in the same round-robin database but with 30 minutes averages for the past week
+    A script to store the current avlues in your round-robin database
+    A cron job that runs every minute calling the above script
+
+To visualize the collected data better, you have decided to also add graphs for the averages over the past hour and the past day, created 2 cron jobs.
+One is to run every 10 minutes updating the hourly graph, and another one is to run every hour to update the daily graph. 
+The graphs should be available at http://IP/load_avg_hourly.png and http://IP/load_avg_daily.png repectively, may need to install and enable httpd for this.
+
+[Analysis]:
+uptime
+
+rrdtool create /tmp/loadavg.rrd --step=60
+DS DS DS
+RRD 1:60
+RRD 30:336
+
+rrdtool upate
+
+[Answer]:
 # rrdtool create /tmp/loadave.rrd --step=60 --start=$(date +%s) DS:loadavg1:GAUGE:60:0:U DS:loadavg5:GAUGE:60:0:U DS:loadavg15:GAUGE:60:0:U RRA:AVERAGE:0.5:1:60 RRA:AVERAGE:0.5:30:336
 # rrdtool update /tmp/loadave.rrd $(date +%s):$(uptime | awk '{print $(NF-2),$(NF-1),$NF}' |  sed 's/,/:/')
 # vim /usr/local/bin/update_loadavg.sh
+#!/bin/bash
+rrdtool update /tmp/loadave.rrd $(date +%s):$(uptime | awk '{print $(NF-2),$(NF-1),$NF}' |  sed 's/,/:/')
 # chmod +x /usr/local/bin/update_loadavg.sh
 # crontab -e
 */1 * * * * /usr/local/bin/update_loadavg.sh
 # service crond restart
-# crontab -l
-
-# rrdtool lastupdate /tmp/loadave.rrd
-# rrdtool info /tmp/loadave.rrd
 
 # rrdtool graph /var/www/html/load_avg_hourly.png -X 0 --start=$(date --date=-1hour +%s) --end=$(date +%s) DEF:ldavg1:/tmp/loadavg.rrd:loadavg1:AVERAGE DEF:ldavg2:/tmp/loadavg.rrd:loadavg5:AVERAGE DEF:ldavg3:/tmp/loadvag.rrd:loadavg15:AVERAGE LINE1=ldavg1#FF0000A0:"1_Min_Load" LINE2=ldavg2#00FF00A0:"5_MIN_Load" LINE3=ldavg3#0000FFA0:"15_Min_Load"
-
 # eog /var/www/html/load_avg_hourly.png
+
+
 # vim /usr/local/bin/plot_loadavg_hourly.sh
+#!/bin/bash
+rrdtool graph /var/www/html/load_avg_hourly.png -X 0 --start=$(date --date=-1hour +%s) --end=$(date +%s) DEF:ldavg1:/tmp/loadavg.rrd:loadavg1:AVERAGE DEF:ldavg2:/tmp/loadavg.rrd:loadavg5:AVERAGE DEF:ldavg3:/tmp/loadvag.rrd:loadavg15:AVERAGE LINE1=ldavg1#FF0000A0:"1_Min_Load" LINE2=ldavg2#00FF00A0:"5_MIN_Load" LINE3=ldavg3#0000FFA0:"15_Min_Load"
 # chmod +x /usr/local/bin/plot_loadavg_hourly.sh
-# crontab -l
+# crontab -e
 */10 * * * * /usr/local/bin/plot_loadavg_hourly.sh
+
+# vim /usr/local/bin/plot_loadavg_daily.sh
+#!/bin/bash
+rrdtool graph /var/www/html/load_avg_hourly.png -X 0 --start=$(date --date=-1day +%s) --end=$(date +%s) DEF:ldavg1:/tmp/loadavg.rrd:loadavg1:AVERAGE DEF:ldavg2:/tmp/loadavg.rrd:loadavg5:AVERAGE DEF:ldavg3:/tmp/loadvag.rrd:loadavg15:AVERAGE LINE1=ldavg1#FF0000A0:"1_Min_Load" LINE2=ldavg2#00FF00A0:"5_MIN_Load" LINE3=ldavg3#0000FFA0:"15_Min_Load"
+# chmod +x /usr/local/bin/plot_loadavg_daily.sh
+# crontab -e
+0 * * * * /usr/local/bin/plot_loadavg_daily.sh
+
+# crontab -l
+*/1 * * * * /usr/local/bin/update_loadavg.sh
+*/10 * * * * /usr/local/bin/plot_loadavg_hourly.sh
+0 * * * * /usr/local/bin/plot_loadavg_daily.sh
 ```
 

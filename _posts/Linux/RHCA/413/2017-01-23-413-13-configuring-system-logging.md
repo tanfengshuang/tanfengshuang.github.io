@@ -15,7 +15,7 @@ Linux上通常可以通过rsyslog来实现系统日志的集中管理，这种�
 ###### Remote Logging with Encrypted TCP
 
 1. Clock First: 检查两台机器上的时钟是否一致
-2. Certificates - TLS
+2. Certificates - TLS(Transport Layer Security 安全传输层协议)
 3. Server Configuration
 
    *    rsyslog: open a TCP port to accept encrypted connection
@@ -31,7 +31,7 @@ Linux上通常可以通过rsyslog来实现系统日志的集中管理，这种�
 
 ```
 # vim /etc/syslog.conf
-*.* @@(O) Server-IP:portN
+*.* @@(o) Server-IP:portN
 
 # vim /etc/rsyslog.d/1.conf
 :fromhost-ip, isequal, "Client-IP1"     /var/log/dir1/messages
@@ -44,30 +44,168 @@ Linux上通常可以通过rsyslog来实现系统日志的集中管理，这种�
 [server] # date
 Sun Jan 22 22:19:36 EST 2017
 
-[client] # date
+[client]# date
 Sun Jan 22 22:19:36 EST 2017
-[client] # certtool --generate-privkey --outfile ca-key.pem
+[client]# certtool --generate-privkey --outfile ca-key.pem
 Generating a 2048 bit RSA private key...
-[client] # ll ca-key.pem
+[client]# ll ca-key.pem
 -rw-------. 1 root root 1679 Jan 22 22:21 ca-key.pem
-[client] # chmod 400 ca-key.pem
-[client] # ll ca-key.pem
+[client]# chmod 400 ca-key.pem
+[client]# ll ca-key.pem
 -r--------. 1 root root 1679 Jan 22 22:21 ca-key.pem
-[client] # 
-[client] # 
-[client] # 
+[client]# certtool --generate-self-signed --load-privkey ca-key.pem  --outfile ca.pem
+[client]# ll ca.pem
+-rw-r--r--. 1 root root 1281 Jan 22 22:27 ca.pem
+[client]# file ca.pem 
+ca.pem: ASCII text
+
+[client]# certtool --generate-privkey --outfile server-key.pem              -> 生成server上的key，可以在任意机器上申请
+Generating a 2048 bit RSA private key...
+[client]# certtool --generate-request --load-privkey server-key.pem --outfile server-request.pem
+...
+Is this a TLS web client certificate? (y/N): y
+Is this also a TLS web server certificate? (y/N): y
+[client]# certtool --generate-certificate --load-request server-request.pem --outfile server-cert.pem --load-ca-certificate ca.pem --load-ca-privkey ca-key.pem
+...
+Is this a TLS web client certificate? (y/N): y
+Is this also a TLS web server certificate? (y/N): y
+[client]# ll
+total 20
+-r--------. 1 root root 1679 Jan 22 22:21 ca-key.pem
+-rw-r--r--. 1 root root 1281 Jan 22 22:27 ca.pem
+-rw-r--r--. 1 root root 1334 Jan 25 02:19 server-cert.pem
+-rw-------. 1 root root 1675 Jan 25 02:13 server-key.pem
+-rw-r--r--. 1 root root 2404 Jan 25 02:15 server-request.pem
+[client]# scp ca.pem server-cert.pem server-key.pem root@server
+[client]# mkdir /etc/rsyslog-keys
+[client]# cp ca.pem /etc/rsyslog-keys
+[client]# ll /etc/rsyslog-keys
+total 4
+-rw-r--r--. 1 root root 1281 Jan 25 02:32 ca.pem
+[client]# yum -y install rsyslog-gnutls
+[client]# vim /etc/rsyslog.d/logging-client.conf
+# certificate files - just CA for a client
+$DefaultNetstreamDriverCAFile /etc/rsyslog-keys/ca.pem
+
+# set up the action
+$DefaultNetstreamDriver gtls            # use gtls netstream driver
+$ActionSendStreamDriverMode 1           # require TLS for the connection
+$ActionSendStreamDriverAuthMode anon    # server is NOT authenticated
+*.info @@(o)serverX.example.com:6514    # send (all) messages of info and above priority
+[client]# service rsyslog restart
+Shutting down system logger: [  OK  ]
+Starting system logger: [  OK  ]
+[client]# logger "test1111111111111111111111111111111111"
+[client]# logger "test2222222222222222222222222222222222"
+[client]# tail -f /var/log/messages
+Jan 25 02:54:35 cloud-qe-16-vm-04 root: test1111111111111111111111111111111111
+Jan 25 02:55:29 cloud-qe-16-vm-04 root: test2222222222222222222222222222222222
+
+
+
+[server]# mkdir /etc/rsyslog-keys
+[server]# ll /etc/rsyslog-keys/
+total 12
+-rw-r--r--. 1 root root 1281 Jan 25 02:21 ca.pem
+-rw-r--r--. 1 root root 1334 Jan 25 02:21 server-cert.pem
+-rw-------. 1 root root 1675 Jan 25 02:21 server-key.pem
+[server]# yum install -y rsyslog-gnutls
+[server]# yum info rsyslog-gnutls
+Loaded plugins: product-id, search-disabled-repos, security, subscription-manager
+This system is not registered to Red Hat Subscription Management. You can use subscription-manager to register.
+Installed Packages
+Name        : rsyslog-gnutls
+Arch        : x86_64
+Version     : 5.8.10
+Release     : 10.el6_6
+Size        : 31 k
+Repo        : installed
+From repo   : beaker-Server
+Summary     : TLS protocol support for rsyslog
+URL         : http://www.rsyslog.com/
+License     : (GPLv3+ and ASL 2.0)
+Description : The rsyslog-gnutls package contains the rsyslog plugins that provide the
+            : ability to receive syslog messages via upcoming syslog-transport-tls
+            : IETF standard protocol.
+[server]# rpm -ql rsyslog-gnutls
+/lib64/rsyslog/lmnsd_gtls.so
+[server]# man 5 rsyslog.conf
+[server]# vim /etc/rsyslog.d/logging-server.conf
+# make gtls driver the default
+$DefaultNetstreamDriver gtls
+
+# certificate files
+$DefaultNetstreamDriverCAFile /etc/rsyslog-keys/ca.pem
+$DefaultNetstreamDriverCertFile /etc/rsyslog-keys/server-cert.pem
+$DefaultNetstreamDriverKeyFile /etc/rsyslog-keys/server-key.pem
+$ModLoad imtcp                                  # load TCP listener
+$InputTCPServerStreamDriverMode 1
+
+# run driver in TLS-only mode
+$InputTCPServerStreamDriverAuthMode anon        # client is NOT authenticated
+$InputTCPServerRun 6514                         # listen on port 6514
+[server]# service rsyslog restart
+Shutting down system logger: [  OK  ]
+Starting system logger: [  OK  ]
+[server]# netstat -antlp | grep 6514
+tcp        0      0 0.0.0.0:6514                0.0.0.0:*                   LISTEN      8374/rsyslogd       
+tcp        0      0 :::6514                     :::*                        LISTEN      8374/rsyslogd 
+[server]# tail -f /var/log/messages 
+Jan 25 02:54:35 cloud-qe-16-vm-04 root: test1111111111111111111111111111111111
+Jan 25 02:55:29 cloud-qe-16-vm-04 root: test2222222222222222222222222222222222
+
+指定server端log输出到文件/var/log/client/messages， 并且不再输出在/var/log/messages 
+[server]# vim /etc/rsyslog.d/remote-filter.conf
+:fromhost-ip, isequal, "10.16.98.105"   /var/log/client/messages
+:fromhost-ip, isequal, "10.16.98.105"   ~
+[server]# service rsyslog restart
+Shutting down system logger: [  OK  ]
+Starting system logger: [  OK  ]
 ```
 
 ### Managing Log File Rotation
 
 ```
-# vim /etc/logrotate.conf
-# vim /etc/logrotate.d/1.conf
-/var/log/dir1/* {
+[server]# cat /etc/logrotate.conf | egrep -v "#|^$"
+weekly
+rotate 4
+create
+dateext
+include /etc/logrotate.d
+/var/log/wtmp {
+    monthly
+    create 0664 root utmp
+	minsize 1M
+    rotate 1
+}
+/var/log/btmp {
+    missingok
+    monthly
+    create 0600 root utmp
+    rotate 1
+}
+
+[server]# vim /etc/logrotate.d/client
+/var/log/client/* {
+    rotate 4
     size 2k
     compress
     missingok
 }
+
+[server]# cat /etc/cron.daily/logrotate 
+#!/bin/sh
+/usr/sbin/logrotate /etc/logrotate.conf
+EXITVALUE=$?
+if [ $EXITVALUE != 0 ]; then
+    /usr/bin/logger -t logrotate "ALERT exited abnormally with [$EXITVALUE]"
+fi
+exit 0
+
+[server]# ls /var/log/client/
+messages
+[server]# /etc/cron.daily/logrotate 
+
 ```
 
 ###### Performance Checklist: Adjusting Log File Rotation Policy
