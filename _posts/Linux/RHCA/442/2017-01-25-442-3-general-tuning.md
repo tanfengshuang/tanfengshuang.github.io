@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "442-chapter3-kernel"
+title:  "General Tuning(442-3)"
 categories: Linux
 tags: RHCA 442
 ---
@@ -188,6 +188,8 @@ Current active profile: default
 ```
 
 ### Configuring Tuned
+
+
 
 ### Limiting Resource Usage
 

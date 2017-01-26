@@ -1,9 +1,4 @@
----
-layout: post
-title:  "442-memory"
-categories: Linux
-tags: RHCA 442
----
+
 
 ```
 # pmap $$ | tail -n 1
