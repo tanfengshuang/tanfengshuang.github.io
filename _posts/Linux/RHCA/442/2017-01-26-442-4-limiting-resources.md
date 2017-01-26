@@ -255,6 +255,68 @@ cgroup.event_control  cgroup.procs  cpu.cfs_period_us  cpu.cfs_quota_us  cpu.rt_
 ###### Assigning Processes to Control Groups - cgred
 
 ```
+# man cgrules.conf
+ESCRIPTION
+       cgrules.conf configuration file is used by libcgroups to define control groups to which a process belongs.
+
+       The file contains a list of rules which assign to a defined group/user a control group in a subsystem (or control groups in subsystems).
+
+       Rules have two formats:
+           <user>                   <controllers>       <destination>
+           <user>:<process name>    <controllers>       <destination>
+
+       Where:
+       user can be:
+           - a user name
+           - a group name with @group syntax
+           - the wildcard ’*’, for any user or group
+           - ’%’, which is equivalent to "ditto" (useful for
+             multi-line rules where different cgroups need to be
+             specified for various hierarchies for a single user)
+
+       process name is optional and it can be:
+           - a process name
+           - a full command path of a process
+
+       controllers can be:
+           - comma separated controller names (no spaces) or
+           - * (for all mounted controllers)
+
+       destination can be:
+           - path relative to the controller hierarchy (ex. pgrp1/gid1/uid1)
+           - following strings called "templates" and will get expanded
+
+                 %u     username, uid if name resolving fails
+                 %U     uid
+                 %g     group name, gid if name resolving fails
+                 %G     gid
+                 %p     process name, pid if name not available
+                 %P     pid
+
+EXAMPLES
+       student         devices         /usergroup/students
+       Student’s processes in the ’devices’ subsystem belong to the control group /usergroup/students.
+
+       student:cp       devices         /usergroup/students/cp
+       When student executes ’cp’ command, the processes in the ’devices’ subsystem belong to the control group /usergroup/students/cp.
+
+       @admin           *              admingroup/
+       Processes started by anybody from admin group no matter in what subsystem belong to the control group admingroup/.
+
+       peter           cpu             test1/
+       %               memory          test2/
+       The  first  line  says Peter’s task for cpu controller belongs to test1 control group. The second one says Peter’s tasks for memory controller belong to test2/
+       control group.
+
+       *               *               default/
+       All processes in any subsystem belong to the control group default/. Since the earliest matched rule is applied, it makes sense to have this line at the end of
+       the list. It will put a task which was not mentioned in the previous rules to default/ control group.
+
+       @students cpu,cpuacct    students/%u
+       Processes  in  cpu  and cpuacct subsystems started by anybody from students group belong to group students/name. Where "name" is user name of owner of the process.
+```
+
+```
 # vim /etc/cgrules.conf
 *:a.sh          cpu             cpulimit_high/
 *:b.sh          cpu             cpulimit_low/
