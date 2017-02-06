@@ -1,0 +1,451 @@
+---
+layout: post
+title:  "Large Memory Workload Tuning(442-9)"
+categories: Linux
+tags: RHCA 442
+---
+
+### Memory Management
+
+###### Introduction to memory and paging
+
+*    For efficiency, memory on a computer system is organized into fixed-size chunks called pages.
+*    The physical RAM on a system is divided into page frames
+*    One page frame holds one page of data.
+*    Processes do not address physical memory directly. Instead, each process has a virtual address space.
+*    The size of a process's virtual address space depends on the processor architecture. On a 32-bit i386 system, a process's virtual address space can hold 2^32 bytes(4 GiB) of memory; on a 64-bit i386 system, a process's virtual address space can hold 2^64 bytes(16 EiB) of memory
+
+
+> How can you tell how much memory a process is using?
+
+Generally, when a process requests memory, it reserves virtual memory addresses but does not actually map them to physical page frames until they are first used.
+
+Tools such as ps and top distinguish between two statistics: "VIRT" or "VSIZE", the total amount of virtual memory a process has asked for, and "RES" or "RSS", the total amount of virtual memory that a process is currently mapping to physical memory. Normally, "RSS" is the more critical value because it represents memory actually allocated and mapped.
+
+
+```
+# ps aux
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND                    -> VSZ RSS
+root         1  0.0  0.0  19368  1428 ?        Ss   Feb03   0:01 /sbin/init
+root         2  0.0  0.0      0     0 ?        S    Feb03   0:00 [kthreadd]
+root         3  0.0  0.0      0     0 ?        S    Feb03   0:01 [migration/0]
+
+# top
+  PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND                        -> VIRT RES
+    1 root      20   0 19368 1428 1108 S  0.0  0.1   0:01.05 init
+    2 root      20   0     0    0    0 S  0.0  0.0   0:00.10 kthreadd
+    3 root     -99   0     0    0    0 S  0.0  0.0   0:01.39 migration/0 
+
+# pmap $$           -> pmap命令用于报告进程的内存映射关系，是Linux调试及运维一个很好的工具
+26191:   -bash
+0000000000400000    852K r-x--  /bin/bash
+00000000006d4000     36K rw---  /bin/bash
+00000000006dd000     24K rw---    [ anon ]
+00000000008dc000     36K rw---  /bin/bash
+0000000001a13000    264K rw---    [ anon ]
+0000003948c00000    128K r-x--  /lib64/ld-2.12.so
+0000003948e1f000      8K r----  /lib64/ld-2.12.so
+0000003948e21000      4K rw---  /lib64/ld-2.12.so
+0000003948e22000      4K rw---    [ anon ]
+0000003949000000      8K r-x--  /lib64/libdl-2.12.so
+0000003949002000   2048K -----  /lib64/libdl-2.12.so
+0000003949202000      4K r----  /lib64/libdl-2.12.so
+0000003949203000      4K rw---  /lib64/libdl-2.12.so
+0000003949400000   1576K r-x--  /lib64/libc-2.12.so
+000000394958a000   2048K -----  /lib64/libc-2.12.so
+000000394978a000     16K r----  /lib64/libc-2.12.so
+000000394978e000      8K rw---  /lib64/libc-2.12.so
+0000003949790000     16K rw---    [ anon ]
+000000394d800000    116K r-x--  /lib64/libtinfo.so.5.7
+000000394d81d000   2044K -----  /lib64/libtinfo.so.5.7
+000000394da1c000     16K rw---  /lib64/libtinfo.so.5.7
+000000394da20000      4K rw---    [ anon ]
+00007ff37479a000     52K r-x--  /lib64/libnss_files-2.12.so
+00007ff3747a7000   2044K -----  /lib64/libnss_files-2.12.so
+00007ff3749a6000      4K r----  /lib64/libnss_files-2.12.so
+00007ff3749a7000      4K rw---  /lib64/libnss_files-2.12.so
+00007ff3749a8000  96844K r----  /usr/lib/locale/locale-archive
+00007ff37a83b000     12K rw---    [ anon ]
+00007ff37a841000      8K rw---    [ anon ]
+00007ff37a843000     28K r--s-  /usr/lib64/gconv/gconv-modules.cache
+00007ff37a84a000      4K rw---    [ anon ]
+00007ffec9cdf000     84K rw---    [ stack ]
+00007ffec9d30000      4K r-x--    [ anon ]
+ffffffffff600000      4K r-x--    [ anon ]
+ total           108356K
+
+# pmap $$ | tail -n 1
+ total           108356K
+# ps aux | grep $$
+root      7806  0.0  0.0 103320   824 pts/1    S+   06:35   0:00 grep 26191
+root     26191  0.0  0.0 108356  1804 pts/1    Ss   Feb05   0:00 -bash
+# ps aux | head -n 1
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+# echo $$
+26191
+```
+
+###### Page Tables and the TLB(Translation Lookaside Buffer)
+
+Since each process maintains its own virtual address space, each process needs its own table of mappings of the virtual addresses of pages to the physical addresses of page frames in RAM.
+
+When a process tries to access a page of virtual memory for which a physical page has not yet been allocated, it will trigger a page fault.
+*    主页缺失(major page fault): If the kernel needs to retrieve a page of memory from disk, it is called a major page fault
+*    次页缺失(minor page fault): If a new page of physical memory needs to be allocated, this is called a minor page fault
+
+```
+# x86info -c
+x86info v1.30.  Dave Jones 2001-2011
+Feedback to <davej@redhat.com>.
+
+Found 8 identical CPUs
+Extended Family: 0 Extended Model: 2 Family: 6 Model: 42 Stepping: 7
+Type: 0 (Original OEM)
+CPU Model (x86info's best guess): Unknown model. 
+Processor name string (BIOS programmed): Intel(R) Core(TM) i7-2600 CPU @ 3.40GHz
+
+Cache info
+TLB info
+ Instruction TLB: 4K pages, 4-way associative, 64 entries.
+ Data TLB: 4KB or 4MB pages, fully associative, 32 entries.
+ Data TLB: 4KB pages, 4-way associative, 64 entries
+ Data TLB: 4K pages, 4-way associative, 512 entries.
+ Data TLB: 4KB or 4MB pages, fully associative, 32 entries.
+ Data TLB: 4KB pages, 4-way associative, 64 entries
+ 64 byte prefetching.
+ Data TLB: 4K pages, 4-way associative, 512 entries.
+Found unknown cache descriptors: 76 ff 
+Total processor threads: 8
+This system has 1 quad-core processor with hyper-threading (2 threads per core) running at an estimated 3.40GHz
+
+# ps o pid,comm,minflt,majflt $$
+  PID COMMAND         MINFLT MAJFLT
+ 7051 bash              1656      0
+
+# ps o pid,comm,minflt,majflt `pidof su`
+  PID COMMAND         MINFLT MAJFLT
+ 6886 su                 624      7
+ 6920 su                 901      3
+ 6969 su                 630      0
+ 7045 su                 904      0
+
+```
+
+```
+# cat /proc/cgroups 
+#subsys_name	hierarchy	num_cgroups	enabled
+cpuset	0	1	1
+ns	0	1	1
+cpu	0	1	1
+cpuacct	0	1	1
+memory	0	1	1
+devices	0	1	1
+freezer	0	1	1
+net_cls	0	1	1
+blkio	0	1	1
+perf_event	0	1	1
+net_prio	0	1	1
+
+# ls /cgroup/memory/
+cgroup.event_control  memory.force_empty         memory.memsw.failcnt             memory.memsw.usage_in_bytes      memory.soft_limit_in_bytes  memory.usage_in_bytes  release_agent
+cgroup.procs          memory.limit_in_bytes      memory.memsw.limit_in_bytes      memory.move_charge_at_immigrate  memory.stat                 memory.use_hierarchy   tasks
+memory.failcnt        memory.max_usage_in_bytes  memory.memsw.max_usage_in_bytes  memory.oom_control               memory.swappiness           notify_on_release
+
+# vim /etc/cgconfig.conf
+group bigmem {
+    memory {
+        memory.limit_in_bytes = 256m;           # 只限制了物理内存，当实际使用时，如果物理内存不够用了，会去用交换分区
+    }
+}
+group bigmem2 {
+    memory {
+        memory.limit_in_bytes = 256m;           # 仅物理内存
+        memory.memsw.limit_in_bytes = 256m;     # 物理内存加交换区
+    }
+}
+# service cgconfig restart
+Stopping cgconfig service: [  OK  ]
+Starting cgconfig service: [  OK  ]
+# cat /cgroup/memory/bigmem/memory.limit_in_bytes 
+268435456
+# cat /cgroup/memory/bigmem/memory.memsw.limit_in_bytes 
+9223372036854775807
+# cat /cgroup/memory/bigmem2/memory.limit_in_bytes 
+268435456
+# cat /cgroup/memory/bigmem2/memory.memsw.limit_in_bytes 
+268435456
+# watch -n .1 free -m
+
+# cgexec -g memory:bigmem bigmem 512        -> 限制内存在cgroup bigmem下，使用bigmem申请物理内存512m，成功
+# cgexec -g memory:bigmem2 bigmem 512       -> 限制内存在cgroup bigmem2下，使用bigmem申请物理内存512m，失败
+
+# cgexec -g memory:bigmem bigmem -v 512        -> 限制内存在cgroup bigmem下，使用bigmem申请虚拟内存512m，成功
+# cgexec -g memory:bigmem2 bigmem -v 512       -> 限制内存在cgroup bigmem2下，使用bigmem申请虚拟内存512m，成功
+# cgexec -g memory:bigmem2 bigmem -v 10240       -> 限制内存在cgroup bigmem2下，使用bigmem申请虚拟内存10240m，成功
+```
+
+### Finding Memory leaks
+
+###### Two different type of Memory Leaks
+
+*    In the first case a program request memory with a system call link malloc, but doesn't actually use this memory - virutal size goes up(VIRT in top, The Committed_AS line in /proc/meminfo will also increase, but no actual physical memory is used), resident size stays almost the same(RSS in top)
+*    In the second case the program actually uses the memory it allocates - This causes the resident size to go up in step with the virtual size, causing a actual memory shortage
+
+```
+# watch -n 1 'free -m ; grep Committed_AS /proc/meminfo' 
+# watch -d -n1 'free -m; grep -i commit /proc/meminfo'
+
+# valgrind --tool=memcheck bigmem -v 256 -> 申请虚拟内存
+# valgrind --tool=memcheck bigmem 256 -> 申请物理内存
+
+# bigmem -v 256 -> 申请虚拟内存
+# bigmem 256    -> 申请物理内存
+```
+
+```
+# valgrind --tool=memcheck ls
+==14337== Memcheck, a memory error detector
+==14337== Copyright (C) 2002-2012, and GNU GPL'd, by Julian Seward et al.
+==14337== Using Valgrind-3.8.1 and LibVEX; rerun with -h for copyright info
+==14337== Command: ls
+==14337== 
+ks-script-HHRJcJ      vgdb-pipe-from-vgdb-to-14337-by-root-on-cloud-qe-16-vm-01.idmqe.lab.eng.bos.redhat.com
+ks-script-HHRJcJ.log  vgdb-pipe-shared-mem-vgdb-14337-by-root-on-cloud-qe-16-vm-01.idmqe.lab.eng.bos.redhat.com
+ks-script-JddDSm      vgdb-pipe-to-vgdb-from-14337-by-root-on-cloud-qe-16-vm-01.idmqe.lab.eng.bos.redhat.com
+systop.ko	      yum.log
+tmp.Nv1049
+==14337== 
+==14337== HEAP SUMMARY:
+==14337==     in use at exit: 21,676 bytes in 15 blocks
+==14337==   total heap usage: 49 allocs, 34 frees, 58,216 bytes allocated
+==14337== 
+==14337== LEAK SUMMARY:
+==14337==    definitely lost: 0 bytes in 0 blocks
+==14337==    indirectly lost: 0 bytes in 0 blocks
+==14337==      possibly lost: 0 bytes in 0 blocks
+==14337==    still reachable: 21,676 bytes in 15 blocks
+==14337==         suppressed: 0 bytes in 0 blocks
+==14337== Rerun with --leak-check=full to see details of leaked memory
+==14337== 
+==14337== For counts of detected and suppressed errors, rerun with: -v
+==14337== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 6 from 6)
+
+# valgrind --leak-check=full ls
+==16355== Memcheck, a memory error detector
+==16355== Copyright (C) 2002-2012, and GNU GPL'd, by Julian Seward et al.
+==16355== Using Valgrind-3.8.1 and LibVEX; rerun with -h for copyright info
+==16355== Command: ls
+==16355== 
+ks-script-HHRJcJ      vgdb-pipe-from-vgdb-to-16355-by-root-on-cloud-qe-16-vm-01.idmqe.lab.eng.bos.redhat.com
+ks-script-HHRJcJ.log  vgdb-pipe-shared-mem-vgdb-16355-by-root-on-cloud-qe-16-vm-01.idmqe.lab.eng.bos.redhat.com
+ks-script-JddDSm      vgdb-pipe-to-vgdb-from-16355-by-root-on-cloud-qe-16-vm-01.idmqe.lab.eng.bos.redhat.com
+systop.ko	      yum.log
+tmp.Nv1049
+==16355== 
+==16355== HEAP SUMMARY:
+==16355==     in use at exit: 21,676 bytes in 15 blocks
+==16355==   total heap usage: 49 allocs, 34 frees, 58,216 bytes allocated
+==16355== 
+==16355== LEAK SUMMARY:
+==16355==    definitely lost: 0 bytes in 0 blocks
+==16355==    indirectly lost: 0 bytes in 0 blocks
+==16355==      possibly lost: 0 bytes in 0 blocks
+==16355==    still reachable: 21,676 bytes in 15 blocks
+==16355==         suppressed: 0 bytes in 0 blocks
+==16355== Reachable blocks (those to which a pointer was found) are not shown.
+==16355== To see them, rerun with: --leak-check=full --show-reachable=yes
+==16355== 
+==16355== For counts of detected and suppressed errors, rerun with: -v
+==16355== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 6 from 6)
+```
+
+### Tuning Swap
+
+The vmstat utility can provide information on whether a system is paging to swap ("swapping") or not. The critical columns in the output of vmstat are si and so, pages swapped in per second and pages swapped out per second.
+
+```
+# vmstat 1
+procs -----------memory---------- ---swap-- -----io---- --system-- -----cpu-----
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in   cs us sy id wa st
+ 0  0      0 485604  55376 1123548    0    0     2     8   15   13  0  0 100  0  0	
+ 0  0      0 485340  55376 1123576    0    0     0     0  451  125  2  3 95  0  0	
+ 0  0      0 485356  55376 1123576    0    0     0     0  462  119  3  3 95  0  0	
+```
+
+###### System Memory and Page Cache
+
+Processes are not the only consumer of system memory. The kernel may use memory for its own code or to speed up the system in other ways. One of these ways is the page cache.
+
+```
+# free
+             total       used       free     shared    buffers     cached
+Mem:       1922096    1436600     485496        216      55384    1123576
+-/+ buffers/cache:     257640    1664456
+Swap:      4128764          0    4128764
+```
+
+###### Swappiness
+
+> swap_tendency = mapped_ratio/2 + distress + vm_swappiness
+
+If swap_tendency is below 100, the kernel will reclaim a page from the page cache; if it is 100 or above, pages which are part of a process memory space will become eligible for swap.
+
+*    mapped_ratio is the percentage of physical memory in use. 
+*    distress(0 ~ 100) is a measure of how much trouble the kernel has in freeing memory. It will start out at 0, but if more attempts are necessary to free memory, it will be increased (to a maximum of 100). 
+*    The vm_swappiness value comes from the sysctl parameter, vm.swappiness.
+
+```
+# free
+             total       used       free     shared    buffers     cached
+Mem:       1922096    1436600     485496        216      55384    1123576
+-/+ buffers/cache:     257640    1664456
+Swap:      4128764          0    4128764
+
+# bc
+bc 1.06.95
+Copyright 1991-1994, 1997, 1998, 2000, 2004, 2006 Free Software Foundation, Inc.
+This is free software with ABSOLUTELY NO WARRANTY.
+For details type `warranty'. 
+scale=8
+1436600/1922096
+.74741324
+
+74%/2 + distress + vm_swappiness
+< 100  使用page cache - 1123576
+>= 100 使用swap - 4128764
+
+# cat /proc/sys/vm/swappiness 
+60
+# sysctl -w vm.swappiness=70
+vm.swappiness = 70
+# cat /proc/sys/vm/swappiness 
+70
+
+
+# echo vm.swappiness=80 >> /etc/sysctl.conf
+# grep vm /etc/sysctl.conf
+vm.swappiness=80
+# sysctl -p
+net.ipv4.ip_forward = 0
+net.ipv4.conf.default.rp_filter = 1
+net.ipv4.conf.default.accept_source_route = 0
+kernel.sysrq = 0
+kernel.core_uses_pid = 1
+net.ipv4.tcp_syncookies = 1
+kernel.msgmnb = 65536
+kernel.msgmax = 65536
+kernel.shmmax = 68719476736
+kernel.shmall = 4294967296
+vm.swappiness = 80
+```
+
+###### Optimizing Swap Spaces
+
+
+Swap performance is heavily infulenced by the location and number of swap spaces. On a spinning hard dirve, placing a swap partition at the outer edge of a platter will give better throughput than placing it near the hub, due to the ZCAV(区域恒定角速度) effects. Placing a swap space on SSD storage may result in better performance due to its lower latency and higher throughput per device.
+
+When multiple swap spaces are in use, the mount option pri=value can be used to specify the priority of use for each space. Swap spaces with a higher pri value will be filled up first before moving on to one with a lower priority. This allows a faster disk to be prioritized over a slower one.
+
+When multiple swap spaces are activated with the same priority, they will be used in a round-robin fashion. This reduces the visit count per individual swap space and results in better performance.
+
+```
+# swapon 
+
+Usage:
+ swapon [options] [<special>]
+ -a, --all                enable all swaps from /etc/fstab
+ -d, --discard[=<policy>] enable swap discards, if supported by device
+ -e, --ifexists           silently skip devices that do not exist
+ -f, --fixpgsz            reinitialize the swap space if necessary
+ -p, --priority <prio>    specify the priority of the swap device
+ -s, --summary            display summary about used swap devices
+ -h, --help               display help
+ -V, --version            display version
+ -v, --verbose            verbose output
+
+The <special> parameter:
+ {-L label | LABEL=label}             LABEL of device to be used
+ {-U uuid  | UUID=uuid}               UUID of device to be used
+ <device>                             name of device to be used
+ <file>                               name of file to be used
+
+# swapon -s
+Filename				Type		Size	Used	Priority
+/dev/dm-1                               partition	4128764	0	-1
+
+# vim /etc/fstab
+/dev/mapper/vg_cloudqe16vm01-lv_swap swap                    swap    defaults        0 0
+
+# swapon -p 1 /dev/vdb1
+# swapon -p 2 /dev/vdb2
+
+```
+
+### Memory Reclamation
+
+Physical memory needs to be reclaimed from time to time to stop memory from filling up, rendering a system unusable.
+
+Memory page states:
+
+*    Free: The page is available for immediate allocation.
+*    Inactive clean: The page is not in active use and the content corresponds to the content on disk because it has already been written back or has not changed since being read.
+*    Inactive dirty: The page is not in active use but the page content has been modified since being read from disk and has not yet been written back.
+*    Active: The page is in active use and not a candidate for being freed.
+
+Pages that are marked as Inactive clean can be treated as free pages when a new page needs to be allocated, but if the process that owns the page later needs it again, a major page fault will occur.
+
+
+```
+# grep -i active /proc/meminfo 
+Active:           363200 kB
+Inactive:         902536 kB
+Active(anon):      12436 kB
+Inactive(anon):    73608 kB
+Active(file):     350764 kB
+Inactive(file):   828928 kB
+```
+
+###### pdflush
+
+In older kernels, writing out dirty pages to disk was handled by kernel threads called pdflush that would be created when necessary. In newer kernels (including those in Red Hat Enterprise Linux 6), pdflush has been replaced with per-BDI flush threads (BDI = Backing Device Interface). Per-BDI flush threads will show up in the process list as flush-MAJOR:MINOR.
+
+*    vm.dirty_expire_centisecs: How old (in 1/100ths of a second) dirty data must be before it is eligible for being written out to disk. This stops the kernel from writing out the same page multiple times in quick succession just because a process modifies another byte of memory.
+*    vm.dirty_writeback_centisecs: How often (in 1/100ths of a second) the kernel will wake up the flushing threads to write out data. Setting this to 0 will disable periodic writeback completely.
+*    vm.dirty_background_ratio: The percentage of total system memory being dirty at which the kernel will start writing out data in the background.
+*    vm.dirty_ratio: The percentage of total system memory being dirty at which a process generating writes will block and write out dirty pages.
+*    There are two more tunables, vm.dirty_bytes and vm.dirty_background_bytes, which will replace the accompanying ratio tunables when set.
+
+```
+# ps aux | grep flush
+root       414  0.0  0.0      0     0 ?        S    Feb03   0:00 [kdmflush]
+root       416  0.0  0.0      0     0 ?        S    Feb03   0:00 [kdmflush]
+root       924  0.0  0.0      0     0 ?        S    Feb03   0:00 [kdmflush]
+root     23198  0.0  0.0 103324   824 pts/0    S+   08:38   0:00 grep flush
+
+# cat /proc/sys/vm/dirty_expire_centisecs 
+3000
+# cat /proc/sys/vm/dirty_writeback_centisecs 
+500
+# cat /proc/sys/vm/dirty_background_ratio 
+10
+# cat /proc/sys/vm/dirty_ratio 
+40
+
+# cat /proc/sys/vm/dirty_bytes 
+0
+# cat /proc/sys/vm/dirty_background_bytes 
+0
+```
+
+###### Out-of-memory handling and the "OOM Killer"
+
+```
+# cat /proc/sys/vm/panic_on_oom 
+0
+
+```
+
+### Non-Uniform Memory Access(NUMA)
+
+
+
