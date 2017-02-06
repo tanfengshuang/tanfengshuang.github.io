@@ -286,13 +286,19 @@ Swap:      4128764          0    4128764
 
 ###### Swappiness
 
-> swap_tendency = mapped_ratio/2 + distress + vm_swappiness
+> swap_tendency = mapped_ratio/2 + distress(内核释放内存的难度，难度越大数值越大) + vm_swappiness
 
 If swap_tendency is below 100, the kernel will reclaim a page from the page cache; if it is 100 or above, pages which are part of a process memory space will become eligible for swap.
 
 *    mapped_ratio is the percentage of physical memory in use. 
 *    distress(0 ~ 100) is a measure of how much trouble the kernel has in freeing memory. It will start out at 0, but if more attempts are necessary to free memory, it will be increased (to a maximum of 100). 
 *    The vm_swappiness value comes from the sysctl parameter, vm.swappiness.
+
+*    swap_tendency < 100  使用page cache - 1123576
+*    swap_tendency >= 100 使用swap - 4128764
+*    所以，可以通过设置vm_swappiness的值，来影响swap_tendency，如果想使用page cache，可以将vm_swappiness的值设置的小一些，这样子swap_tendency的值可以不容易超过100；如果想使用swap分区，可以将vm_swappiness的值设置的大一些
+*    对于I/O操作比较的频繁的系统，不建议使用page cache
+
 
 ```
 # free
@@ -311,8 +317,6 @@ scale=8
 .74741324
 
 74%/2 + distress + vm_swappiness
-< 100  使用page cache - 1123576
->= 100 使用swap - 4128764
 
 # cat /proc/sys/vm/swappiness 
 60
@@ -343,6 +347,8 @@ vm.swappiness = 80
 
 
 Swap performance is heavily infulenced by the location and number of swap spaces. On a spinning hard dirve, placing a swap partition at the outer edge of a platter will give better throughput than placing it near the hub, due to the ZCAV(区域恒定角速度) effects. Placing a swap space on SSD storage may result in better performance due to its lower latency and higher throughput per device.
+
+If using an SSD for swap space, and the swap space is frequently used, ensure that the device supports appropriate wear leveling and can sustain a large number of writes before failure. (SLC-based storage may be preferred over MLC-based storage because of this.) Otherwise, the device may experience premature wear.
 
 When multiple swap spaces are in use, the mount option pri=value can be used to specify the priority of use for each space. Swap spaces with a higher pri value will be filled up first before moving on to one with a lower priority. This allows a faster disk to be prioritized over a slower one.
 
@@ -423,13 +429,13 @@ root       924  0.0  0.0      0     0 ?        S    Feb03   0:00 [kdmflush]
 root     23198  0.0  0.0 103324   824 pts/0    S+   08:38   0:00 grep flush
 
 # cat /proc/sys/vm/dirty_expire_centisecs 
-3000
+3000            -> 30s, 如果到了30s，脏数据还没有写入，会被丢弃
 # cat /proc/sys/vm/dirty_writeback_centisecs 
-500
+500             -> 5s，每5s会执行一次写操作，写入脏数据
 # cat /proc/sys/vm/dirty_background_ratio 
-10
+10              -> 当所有进程使用的内存达到10%时，虽然没有达到5s的写时间，仍然会执行写操作
 # cat /proc/sys/vm/dirty_ratio 
-40
+40              -> 当某个进程使用的内存达到40%时，虽然没有达到5s的写时间，仍然会执行写操作
 
 # cat /proc/sys/vm/dirty_bytes 
 0
@@ -437,15 +443,302 @@ root     23198  0.0  0.0 103324   824 pts/0    S+   08:38   0:00 grep flush
 0
 ```
 
-###### Out-of-memory handling and the "OOM Killer"
+###### Memory Zones and the "OOM Killer"
+
+It is possible for the system to be in an out-of-memory condition while free still reports memory available. This is because sometimes memory is needed from a particular memory zone that is not available.
+
+When a process or the kernel requests a memory allocation, it may need it to be located in "low" memory, at a particular physical memory address or lower.
+
+*    64-bit x86_64 physical memory: ZONE_DMA   ZONE_DMA32      ZONE_NORMAL
+*    32-bit i386 physical memory: ZONE_DMA   ZONE_NORMAL    ZONE_HIGHMEM
+ 
+The /proc/buddyinfo file shows how many contiguous pages are available in each size for each memory zone. If a zone has all zeros for its entire line, that zone is out of memory, and there is a risk of the OOM killer firing if the system cannot reclaim memory from other sources such as the page cache and swapping. 
 
 ```
-# cat /proc/sys/vm/panic_on_oom 
+# cat /proc/buddyinfo
+Node 0, zone      DMA     11      1      2      3      1      0      2      1      3      2      0 
+Node 0, zone    DMA32     74   1023    905    291    164    147     71     39     50     35     60 
+
+# cat /proc/buddyinfo           -> ample output of a /proc/buddyinfo very short on ZONE_NORMAL
+Node 0, zone      DMA      3      1      3      1      3      2      2      1      2      2      2 
+Node 0, zone   Normal      0      2      0      0      0      0      0      0      0      0      0 
+Node 0, zone  Highmem   1822    143      0      0      0      0      1      0      0      0      0
+```
+
+当次缺页发生时，没有空闲内存可以分配时，发生内存超出
+
+```
+# cat /proc/sys/vm/panic_on_oom             -> 为0时，如果内存超出，OOM会杀进程，为1，当内存超出时，直接内核恐慌，不会杀进程
 0
+# echo 1 > /proc/sys/vm/panic_on_oom
+
+# cat /proc/1/oom_adj                       -> oom_adj(-17 ~ 15), 0是默认值，数值越小，越不会被杀(-17永远不会被杀)；数值越大，越会优先被杀
+0
+
+# ps -aux | grep httpd
+Warning: bad syntax, perhaps a bogus '-'? See /usr/share/doc/procps-3.2.8/FAQ
+root     21107  0.0  0.2 177404  3848 ?        Ss   11:34   0:00 /usr/sbin/httpd
+apache   21109  0.0  0.1 177404  2456 ?        S    11:34   0:00 /usr/sbin/httpd
+apache   21110  0.0  0.1 177404  2472 ?        S    11:34   0:00 /usr/sbin/httpd
+apache   21111  0.0  0.1 177404  2456 ?        S    11:34   0:00 /usr/sbin/httpd
+apache   21112  0.0  0.1 177404  2456 ?        S    11:34   0:00 /usr/sbin/httpd
+apache   21113  0.0  0.1 177404  2456 ?        S    11:34   0:00 /usr/sbin/httpd
+apache   21114  0.0  0.1 177404  2456 ?        S    11:34   0:00 /usr/sbin/httpd
+apache   21115  0.0  0.1 177404  2456 ?        S    11:34   0:00 /usr/sbin/httpd
+apache   21116  0.0  0.1 177404  2456 ?        S    11:34   0:00 /usr/sbin/httpd
+root     21175  0.0  0.0 103320   824 pts/4    S+   11:34   0:00 grep httpd
+
+
+# echo 15 > /proc/21107/oom_adj
+# echo f > /proc/sysrq-trigger          -> 强制让OOM Killer工作，这时OOM Killer会至少杀一个进程
+# dmesg
+[ pid ]   uid  tgid total_vm      rss cpu oom_adj oom_score_adj name
+[  586]     0   586     2780      326   0     -17         -1000 udevd
+[ 1262]     0  1262     2281      247   1       0             0 dhclient
+[ 1319]     0  1319     6900      202   1     -17         -1000 auditd
+[ 1353]     0  1353    62272      404   1       0             0 rsyslogd
+[ 1387]     0  1387     4565      174   1       0             0 irqbalance
+[ 1405]    32  1405     4746      211   1       0             0 rpcbind
+[ 1427]    29  1427     5839      317   1       0             0 rpc.statd
+[ 1461]    81  1461     7954      299   1       0             0 dbus-daemon
+[ 1483]     0  1483    47245      788   1       0             0 cupsd
+[ 1515]     0  1515     1021      160   0       0             0 acpid
+[ 1527]    68  1527     9474     1465   0       0             0 hald
+[ 1528]     0  1528     5100      331   1       0             0 hald-runner
+[ 1561]     0  1561     5630      318   1       0             0 hald-addon-inpu
+[ 1570]    68  1570     4502      280   0       0             0 hald-addon-acpi
+[ 6628]     0  6628    16560      309   1     -17         -1000 sshd
+[ 6655]    38  6655     7686      502   1       0             0 ntpd
+[ 6676]     0  6676    23263      681   0       0             0 sendmail
+[ 6686]    51  6686    20082      532   0       0             0 sendmail
+[ 6714]     0  6714    45759      615   1       0             0 abrtd
+[ 6726]     0  6726    29219      342   0       0             0 crond
+[ 6741]     0  6741     5278      126   0       0             0 atd
+[ 6757]     0  6757    27088      176   0       0             0 rhsmcertd
+[ 6772]     0  6772    59990     4197   1       0             0 beah-srv
+[ 6801]     0  6801    81668     5398   1       0             0 beah-beaker-bac
+[ 6822]     0  6822    55720     3664   0       0             0 beah-fwd-backen
+[ 7330]     0  7330    37553     4860   0       0             0 beah-rhts-task
+[ 7537]     0  7537     1017      145   0       0             0 mingetty
+[ 7539]     0  7539     1017      144   0       0             0 mingetty
+[ 7541]     0  7541     1017      145   0       0             0 mingetty
+[ 7543]     0  7543     1017      145   0       0             0 mingetty
+[ 7545]     0  7545     1017      144   0       0             0 mingetty
+[ 7547]     0  7547     1017      145   0       0             0 mingetty
+[26158]     0 26158    25522     1033   1       0             0 sshd
+[26164]     0 26164    27089      445   1       0             0 bash
+[26187]     0 26187    25523     1034   1       0             0 sshd
+[26191]     0 26191    27089      455   1       0             0 bash
+[26711]     0 26711     2779      293   0     -17         -1000 udevd
+[26712]     0 26712     2779      287   0     -17         -1000 udevd
+[27731]     0 27731    25523     1040   0       0             0 sshd
+[27735]     0 27735    27089      445   0       0             0 bash
+[ 6886]     0  6886    40851      495   1       0             0 su
+[ 6887]   501  6887    27089      452   1       0             0 bash
+[ 6920]   501  6920    40884      679   1       0             0 su
+[ 6926]     0  6926    27089      434   1       0             0 bash
+[ 6969]     0  6969    40851      496   0       0             0 su
+[ 6970]   501  6970    27089      447   1       0             0 bash
+[ 7045]   501  7045    40884      679   0       0             0 su
+[ 7051]     0  7051    27089      450   1       0             0 bash
+[ 7762]     0  7762    44286     1523   1       0             0 tuned
+[ 8305]     0  8305    27055      483   0       0             0 watch
+[12326]     0 12326    34870     1320   1       0             0 vim
+[18885]     0 18885    25519     1039   1       0             0 sshd
+[19078]     0 19078    27089      448   1       0             0 bash
+[19125]     0 19125    25519     1037   1       0             0 sshd
+[19177]     0 19177    27089      438   0       0             0 bash
+[21107]     0 21107    44351      962   1      15          1000 httpd
+[21109]    48 21109    44351      614   1       0             0 httpd
+[21110]    48 21110    44351      618   0       0             0 httpd
+[21111]    48 21111    44351      614   0       0             0 httpd
+[21112]    48 21112    44351      614   1       0             0 httpd
+[21113]    48 21113    44351      614   0       0             0 httpd
+[21114]    48 21114    44351      614   1       0             0 httpd
+[21115]    48 21115    44351      614   1       0             0 httpd
+[21116]    48 21116    44351      614   1       0             0 httpd
+Out of memory: Kill process 21107 (httpd) score 1000 or sacrifice child
+Killed process 21109, UID 48, (httpd) total-vm:177404kB, anon-rss:1780kB, file-rss:676kB
+
+# ps -aux | grep httpd
+Warning: bad syntax, perhaps a bogus '-'? See /usr/share/doc/procps-3.2.8/FAQ
+root     21107  0.0  0.2 177404  3848 ?        Ss   11:34   0:00 /usr/sbin/httpd
+apache   21110  0.0  0.1 177404  2472 ?        S    11:34   0:00 /usr/sbin/httpd
+apache   21111  0.0  0.1 177404  2456 ?        S    11:34   0:00 /usr/sbin/httpd
+apache   21112  0.0  0.1 177404  2456 ?        S    11:34   0:00 /usr/sbin/httpd
+apache   21113  0.0  0.1 177404  2456 ?        S    11:34   0:00 /usr/sbin/httpd
+apache   21114  0.0  0.1 177404  2456 ?        S    11:34   0:00 /usr/sbin/httpd
+apache   21115  0.0  0.1 177404  2456 ?        S    11:34   0:00 /usr/sbin/httpd
+apache   21116  0.0  0.1 177404  2456 ?        S    11:34   0:00 /usr/sbin/httpd
+root     22487  0.0  0.0 103320   820 pts/4    R+   11:37   0:00 grep httpd
+# echo f > /proc/sysrq-trigger
+# dmesg
+Out of memory: Kill process 21107 (httpd) score 1000 or sacrifice child
+Killed process 21110, UID 48, (httpd) total-vm:177404kB, anon-rss:1780kB, file-rss:692kB
+
+# tail /var/log/messages
+Feb  6 11:37:41 cloud-qe-16-vm-01 kernel: [21107]     0 21107    44351      962   1      15          1000 httpd
+Feb  6 11:37:41 cloud-qe-16-vm-01 kernel: [21110]    48 21110    44351      618   0       0             0 httpd
+Feb  6 11:37:41 cloud-qe-16-vm-01 kernel: [21111]    48 21111    44351      614   0       0             0 httpd
+Feb  6 11:37:41 cloud-qe-16-vm-01 kernel: [21112]    48 21112    44351      614   1       0             0 httpd
+Feb  6 11:37:41 cloud-qe-16-vm-01 kernel: [21113]    48 21113    44351      614   0       0             0 httpd
+Feb  6 11:37:41 cloud-qe-16-vm-01 kernel: [21114]    48 21114    44351      614   1       0             0 httpd
+Feb  6 11:37:41 cloud-qe-16-vm-01 kernel: [21115]    48 21115    44351      614   1       0             0 httpd
+Feb  6 11:37:41 cloud-qe-16-vm-01 kernel: [21116]    48 21116    44351      614   1       0             0 httpd
+Feb  6 11:37:41 cloud-qe-16-vm-01 kernel: Out of memory: Kill process 21107 (httpd) score 1000 or sacrifice child
+Feb  6 11:37:41 cloud-qe-16-vm-01 kernel: Killed process 21110, UID 48, (httpd) total-vm:177404kB, anon-rss:1780kB, file-rss:692kB
 
 ```
 
 ### Non-Uniform Memory Access(NUMA)
+
+On older i386 and x86-64 systems, all memory is equally accessible by the CPUs. That means that access times for all memory addresses are the same, no matter which CPU is performing the operation. The CPUs were connected by a shared front-side bus (FSB) to main memory. This memory architecture is called Uniform Memory Access (UMA).
+
+On more recent x86-64 processors, this is no longer the case. On a NUMA, or Non-uniform Memory Access system, system memory is divided into zones that are connected directly to particular CPUs or sockets. In this case, accessing memory that is local to the CPU is going to be faster than accessing memory that is connected to a remote CPU on that system.
+
+Examples:
+
+|numactl --interleave=all bigdatabase          |Run bigdatabase with its memory interleaved across all CPUs.|
+|numactl --cpunodebind=0 --membind=0,1 process |Run process on node 0 with all memory allocated on node 0 and node 1.|
+|numactl --preferred=1; numactl --show         |Set node 1 as preferred, and show the resulting state.|
+|numactl --localalloc /dev/shm/file            |Reset the policy for the shared memory file to the default localalloc policy.|
+
+```
+# numactl --show
+policy: default
+preferred node: current
+physcpubind: 0 1 
+cpubind: 0 
+nodebind: 0 
+membind: 0 
+
+# cat /proc/cpuinfo | grep "physical id"
+physical id	: 0
+physical id	: 1
+# cat /proc/cpuinfo | grep "cpu cores" | uniq
+cpu cores	: 1
+# cat /proc/cpuinfo | grep "core id" | sort -u
+core id		: 0
+# cat /proc/cpuinfo | grep processor 
+processor	: 0
+processor	: 1
+# cat /proc/cpuinfo | grep processor | wc -l        -> 如果这个数值等于上面 物理cpu个数*cpu_cores, 说明没有超频，否则说明超频了（例如此数值是4）
+2
+
+# numactl --hardware
+available: 1 nodes (0)
+node 0 cpus: 0 1
+node 0 size: 2047 MB
+node 0 free: 451 MB
+node distances:
+node   0 
+  0:  10 
+
+
+# numastat 
+                           node0
+numa_hit                35869592
+numa_miss                      0
+numa_foreign                   0
+interleave_hit             20488
+local_node              35869592
+other_node                     0
+
+# vim /etc/cgconfig.conf
+group group1 {
+    cpuset {
+        cpuset.cpus=0;
+        cpuset.mems=0;
+    }
+}
+# service cgconfig restart
+# chkconfig cgconfig on
+# vim /etc/cgrules.conf
+*:top           cpuset          group1/
+# service cgred restart
+
+# ps o psr,comm,pid
+PSR COMMAND           PID
+  1 su               6886
+  1 su               6920
+  1 bash             6926
+  0 su               6969
+  0 su               7045
+  1 bash             7051
+  0 mingetty         7537
+  0 mingetty         7539
+  0 mingetty         7541
+  0 mingetty         7543
+  0 mingetty         7545
+  0 mingetty         7547
+  1 watch            8305
+  0 ps               9987
+  1 vim             12326
+  1 bash            19078
+  1 bash            19177
+  1 bash            26164
+  1 bash            26191
+  0 bash            27735
+# ps efo psr,comm,pid
+PSR COMMAND           PID
+  0 bash            27735
+  1  \_ su           6886
+  1 bash            26191
+  1  \_ vim         12326
+  1 bash            26164
+  1 bash            19177
+  0 bash            19078
+  1  \_ ps          10484
+  0 su               7045
+  1  \_ bash         7051
+  1      \_ watch    8305
+  1 su               6920
+  1  \_ bash         6926
+  0      \_ su       6969
+  0 mingetty         7547
+  0 mingetty         7545
+  0 mingetty         7543
+  0 mingetty         7541
+  0 mingetty         7539
+  0 mingetty         7537
+
+# watch -n 1 ps o psr,comm,pid
+
+```
+
+```
+top 翻页 < >
+top 按数字1， 显示所有cpu0 cpu1或者cpus(s)
+
+top 设置显示列 - 例如，按f，出现下面选项， 按j则选中（* J: P          = Last used cpu (SMP)），最后按回车键enter，top命令会多出一列 P
+* A: PID        = Process Id
+* E: USER       = User Name
+* H: PR         = Priority
+* I: NI         = Nice value
+* O: VIRT       = Virtual Image (kb)
+* Q: RES        = Resident size (kb)
+* T: SHR        = Shared Mem size (kb)
+* W: S          = Process Status
+* K: %CPU       = CPU usage
+* N: %MEM       = Memory usage (RES)
+* M: TIME+      = CPU Time, hundredths
+  b: PPID       = Parent Process Pid
+  c: RUSER      = Real user name
+  d: UID        = User Id
+  f: GROUP      = Group Name
+  g: TTY        = Controlling Tty
+  j: P          = Last used cpu (SMP)
+  p: SWAP       = Swapped size (kb)
+  l: TIME       = CPU Time
+  r: CODE       = Code size (kb)
+  s: DATA       = Data+Stack size (kb)
+  u: nFLT       = Page Fault count
+  v: nDRT       = Dirty Pages count
+  y: WCHAN      = Sleeping in Function
+  z: Flags      = Task Flags <sched.h>
+* X: COMMAND    = Command name/line
+
+```
 
 
 

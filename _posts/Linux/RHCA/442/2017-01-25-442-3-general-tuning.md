@@ -331,7 +331,7 @@ tmpfs                 985M     0  985M   0% /dev/shm
 /dev/vda1             500M   41M  433M   9% /boot
 /dev/mapper/vg_cloudqe16vm01-lv_home
                        27G   47M   26G   1% /home
-# e2freefrag /dev/vda
+# e2freefrag /dev/vda       -> report free space fragmentation information
 vda   vda1  vda2  
 # e2freefrag /dev/vda1
 Device: /dev/vda1
@@ -354,7 +354,7 @@ Extent Size Range :  Free extents   Free Blocks  Percent
    32M...   64M-  :             3        155130   34.24%
    64M...  128M-  :             2        232705   51.36%
 
-# filefrag /boot/grub/grub.conf 
+# filefrag /boot/grub/grub.conf             -> report on file fragmentation   
 /boot/grub/grub.conf: 1 extent found
 # ls -lh /boot/grub/grub.conf
 -rw-------. 1 root root 871 Feb  4 04:09 /boot/grub/grub.conf
@@ -388,14 +388,15 @@ RAID条带化技术就是一种自动的将 I/O 的负载均衡到多个物理�
                           number of data-bearing disks in the RAID (e.g. for RAID 5 there is one parity disk, so N will be the number of disks in the array minus  1).
                           This allows the block allocator to prevent read-modify-write of the parity in a RAID stripe if possible when the data is written.
 
-RAID 5
+RAID 5： 2块数据盘，1块校验盘
  [A] [B] [C]
- 1M --- chunk size(64k)
+ 1M --- chunk size(假设为64k)  -> 例如一个文件大小为1M，每次写完一个chunk size（64K）后才会移到下一个磁盘
                           
-RAID 6
+RAID 6： 3块数据盘，2块校验盘
  [A] [B] [C] [D] [E]
  1M --- chunk size
-# mkfs -t ext4 -E stride=chunksize/blocksize,stripe-width=3*16
-# mkfs.ext4 -E stride=16,stripe-width=48 /dev/sda2
+ 
+# mkfs -t ext4 -E stride=chunksize/blocksize,stripe-width=N(数据盘个数，例如RAID5为3-1，RAID6为5-2)*stride-size
+# mkfs.ext4 -E stride=16(64/4),stripe-width=48(3*16) /dev/sda2
 
 ```
