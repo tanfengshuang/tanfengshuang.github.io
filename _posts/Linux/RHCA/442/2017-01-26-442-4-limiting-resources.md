@@ -131,7 +131,9 @@ These subsystems are also known as resource controllers or controller
 ###### Setting Limits for Control Cgroups
 
 ```
-# yum install -y libcgroup
+# yum install -y libcgroup              -> on RHEL6
+# yum install -y libcgroup-tools        -> on RHEL7
+
 # vim /etc/cgconfig.conf
 mount {
         cpuset  = /cgroup/cpuset;
@@ -249,6 +251,28 @@ cgroup.event_control  cgroup.procs  cpu.cfs_period_us  cpu.cfs_quota_us  cpu.rt_
 
 # cat /cgroup/cpu/cpulimit_low/cpu.shares
 10
+```
+
+```
+on RHEL7, /sys/fs/cgroup
+# ll /sys/fs/cgroup
+total 0
+drwxr-xr-x. 4 root root  0 Feb  3 23:22 blkio
+lrwxrwxrwx. 1 root root 11 Feb  3 23:22 cpu -> cpu,cpuacct
+lrwxrwxrwx. 1 root root 11 Feb  3 23:22 cpuacct -> cpu,cpuacct
+drwxr-xr-x. 4 root root  0 Feb  3 23:22 cpu,cpuacct
+drwxr-xr-x. 2 root root  0 Feb  3 23:22 cpuset
+drwxr-xr-x. 4 root root  0 Feb  4 00:01 devices
+drwxr-xr-x. 2 root root  0 Feb  3 23:22 freezer
+drwxr-xr-x. 2 root root  0 Feb  3 23:22 hugetlb
+drwxr-xr-x. 4 root root  0 Feb  3 23:22 memory
+lrwxrwxrwx. 1 root root 16 Feb  3 23:22 net_cls -> net_cls,net_prio
+drwxr-xr-x. 2 root root  0 Feb  3 23:22 net_cls,net_prio
+lrwxrwxrwx. 1 root root 16 Feb  3 23:22 net_prio -> net_cls,net_prio
+drwxr-xr-x. 2 root root  0 Feb  3 23:22 perf_event
+drwxr-xr-x. 2 root root  0 Feb  3 23:22 pids
+drwxr-xr-x. 4 root root  0 Feb  3 23:22 systemd
+
 ```
 
 
