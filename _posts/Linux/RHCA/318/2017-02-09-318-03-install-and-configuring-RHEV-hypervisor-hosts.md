@@ -51,9 +51,9 @@ tags: RHCA 318
 4. RHEV 系统管理程序系统启动后，作为 admin，利用密码 redhat123 登录。状态和配置项目的主菜单将出现在屏幕的左侧。通过使用上下箭头键选择各菜单项以将其突出显示，然后按 Enter 键，可以选择它们。 
 5. 从主菜单中选择网络。出现网络配置屏幕时，设置主机名和 DNS 及 NTP 设置。提供以下值：
 
-    主机名：servera.podX.example.com
-    DNS 服务器 1：172.25.254.254
-    NTP 服务器 1：172.25.254.254
+*    主机名：servera.podX.example.com
+*    DNS 服务器 1：172.25.254.254
+*    NTP 服务器 1：172.25.254.254
 
 选择<保存>以确认选择。
 
@@ -61,21 +61,23 @@ tags: RHCA 318
 
 出现网络接口配置屏幕时，为 IPv4 设置：选择静态单选按钮，然后提供以下值：
 
-    IP 地址：172.25.X.10
-    网络掩码：255.255.255.0
-    网关：172.25.X.254
+*    IP 地址：172.25.X.10
+*    网络掩码：255.255.255.0
+*    网关：172.25.X.254
 
 选择<保存>以确认选择。出现确认框时，选择关闭。 
 
 6. 只有在联机学习环境中运行时，才需要执行此步骤，因为云的嵌套虚拟化缺少一些运行 RHEV-H 所需的信息。    
 打开虚拟键盘将 F2 发送到系统，以打开 Rescue Shell。选择确定以显示提示符。
 
+```
 [root@servera admin]# mkdir -p /config/usr/share/libvirt
 [root@servera admin]# wget http://classroom.example.com/materials/cpu_map.xml -P /config/usr/share/libvirt
 [root@servera admin]# echo "/usr/share/libvirt/cpu_map.xml" >> /config/files
 [root@servera admin]# uuidgen -r > /etc/vdsm/vdsm.id
 [root@servera admin]# persist /etc/vdsm/vdsm.id
 [root@servera admin]# reboot
+```
 
 在启动完成后，重新登录 RHEV-H 配置界面。 
 
@@ -83,8 +85,8 @@ tags: RHCA 318
 
 8. 从主菜单中选择 RHEV-M。指定允许您的 RHEV-H 主机与 RHEV-M 服务器进行通信的值。
 
-    管理服务器：rhevm.podX.example.com
-    管理服务器端口：443
+*    管理服务器：rhevm.podX.example.com
+*    管理服务器端口：443
 
 使用提供的信息填写相关字段。提供 RHEV-M 密码 redhat 并确认。选择<保存并注册>，以保存您的更改。    
 当 RHEV-H 主机联系 RHEV-M 服务器时，它应显示数字指纹。选择 <接受>，以继续 RHEV-M 注册。注册成功后，选择关闭。    
