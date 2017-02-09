@@ -24,7 +24,7 @@ engine-manage-domains add --domain=example.com --provider=ipa --user=rhevadmin  
 service ovirt-engine restart
 
 3.配置数据中心：
-配置RHEV-M的数据中心exam1，集群cluster1支持64为os，数据中心存储类型为Shared，数据中心使用的资源：
+配置RHEV-M的数据中心exam1，集群cluster1支持64位os，数据中心存储类型为Shared，数据中心使用的资源：
 1）ISCSI数据域的名为data，target是有host.doamin1.example.com导出的；
 2）NFS ISO域的名为iso，使用的是host.domain1.example.com:/exports路径的NFS导出。
 
