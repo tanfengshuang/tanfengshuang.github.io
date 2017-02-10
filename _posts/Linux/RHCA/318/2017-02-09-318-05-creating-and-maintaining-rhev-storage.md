@@ -210,6 +210,76 @@ Saving to: “rhel-server-7.1-x86_64-dvd.iso”
 *    使用主机： 使用要求的活动主机来执行与存储的通信。例如，servera.podX.example.com
 *    导出路径： 对于 NFS 存储，输入 NFS 服务器（IP 地址或可解析的主机名）和所连接的导出路径。例如，rhevm.podX.example.com:/exports/exp
 
+
+###### 练习：创建数据存储域
+
+在本实验中，您将连接一个新存储域。
+
+成果：
+
+*    您应该能够在数据中心 testdcX 中使用 NFS 建立一个名为 testdataX 的数据存储域（通过指向 rhevm.podX.example.com:/exports/testdata 的 servera）。
+*    您应该能够在数据中心 testdcX 中使用 NFS 建立一个名为 testexportX 的导出存储域（通过指向 rhevm.podX.example.com:/exports/testexport 的 servera）。 
+
+此操作需要之前练习中的下列组件：
+
+*    rhevm 上安装的 RHEV Manager。
+*    与 rhevm 连接的管理门户。
+*    已安装的 RHEV-H 节点。
+*    名为 testdcX 的数据中心。
+*    名为 testcluX 且包含单个 RHEV-H 主机的群集。
+
+请执行以下步骤：
+
+1. 创建将用于 RHEV 存储域的 NFS 导出。
+
+在 rhevm 上以 root 身份，创建名为 /exports/testdata 的目录，以及名为 /exports/testexport 的目录（所有权 UID:GID 为 36:36）。
+
+```
+        [root@rhevm ~]# mkdir /exports/testdata
+        [root@rhevm ~]# mkdir /exports/testexport
+        [root@rhevm ~]# chown 36:36 /exports/test*
+```
+
+2. 配置 NFS 服务器，以向局域网共享新目录并提供写入访问权限。
+
+整个 echo 命令应位于一行。请小心使用一对 > “大于”号附加到文件，或使用编辑器在带引号的文本内添加数据。
+
+```
+        [root@rhevm ~]# echo "/exports/testdata   172.25.0.0/255.255.0.0(rw,sync,no_root_squash)" >> /etc/exports
+        [root@rhevm ~]# echo "/exports/testexport   172.25.0.0/255.255.0.0(rw,sync,no_root_squash)" >> /etc/exports
+        [root@rhevm ~]# exportfs -r
+```
+
+3. 在您的数据中心内创建数据存储域。
+
+使用 rhevadmin 用户名和 redhat 密码在域 example.com 中登录 RHEV 管理门户。导航到系统，然后单击存储选项卡。创建带有以下值的新数据存储域：
+
+*    名称：testdataX（其中 X 是您的 pod 号）。
+*    数据中心：testdcX（其中 X 为您的 pod 号）。
+*    域功能/存储类型：Data / NFS
+*    使用主机：servera.podX.example.com
+*    导出路径：rhevm.podX.example.com:/exports/testdata
+            
+单击新域按钮。“新域”对话框显示。使用上述值填写相关信息。单击确定。耐心等待存储过渡至“活动”，因为这是第一个存储域和“主存储域”。
+
+4. 在您的数据中心内创建导出存储域。
+
+仍在系统中，单击存储选项卡。使用以下值创建新的导出存储域：
+
+*    名称：testexportX（其中 X 是您的 pod 号）。
+*    数据中心：testdcX（其中 X 为您的 pod 号）。
+*    域功能/存储类型：Export / NFS
+*    使用主机：servera.podX.example.com
+*    导出路径：rhevm.podX.example.com:/exports/testexport
+
+单击新域按钮。“新域”对话框显示。使用上述值填写相关信息。单击确定。耐心等待存储变为“活动”。
+
+5. 确保存储域对群集可用。
+
+单击数据中心选项卡。选择数据中心 testdcX。单击下方存储选项卡并确认 testdataX 以及 testexportX 显示在列表中，且状态为活动
+
+
+
 ### 将存储与 OpenStack 集成
 
 ###### 集成 Glance 映像服务
@@ -240,8 +310,7 @@ Saving to: “rhel-server-7.1-x86_64-dvd.iso”
 
 目前作为技术预览提供，管理员可以将 RHEV 与 OpenStack Volume 项目（代码名称 Cinder）接口。Cinder 作为 OpenStack Volume 提供者类型下面的外部提供者来提供。集成后，管理员可以检索 Cinder 卷，并可在 Cinder 域中创建新的虚拟磁盘。创建的磁盘可以与虚拟机连接和分离，并且支持本机 RHEV 功能，比如将磁盘标记为可引导或可共享。此最新版本只能管理 Ceph 存储调配的卷。
 
-###### 
-未来工作
+###### 未来工作
 
 目前的实现正在积极开发中。其中的一些新功能将包含：
 
