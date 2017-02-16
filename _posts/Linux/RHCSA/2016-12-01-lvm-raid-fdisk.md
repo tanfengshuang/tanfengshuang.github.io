@@ -66,7 +66,24 @@ tags: RHCSA vgcreate lvcreate vgs lvs lvresize fdisk mkswap swapon mdadmin mount
 ```
 
 ```
-# swap分区
+# swapon
+
+Usage:
+ swapon -a [-e] [-v] [-f]             enable all swaps from /etc/fstab
+ swapon [-p priority] [-v] [-f] <special>  enable given swap
+ swapon -s                            display swap usage summary
+ swapon -h                            display help
+ swapon -V                            display version
+
+The <special> parameter:
+ {-L label | LABEL=label}             LABEL of device to be used
+ {-U uuid  | UUID=uuid}               UUID of device to be used
+ <device>                             name of device to be used
+ <file>                               name of file to be used
+```
+
+```
+swap分区
 # fdisk /dev/sda
 # partprobe             -> 重读分区表
 # mkswap /dev/sda3      -> 使用fdisk来创建交换分区（例如 /dev/sda3 是创建的交换分区），使用 mkswap 命令来设置交换分区

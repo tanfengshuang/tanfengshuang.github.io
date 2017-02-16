@@ -65,6 +65,76 @@ tun         vpn         wifi
 
 ```
 
+```
+# nmcli con add type team con-name team0 ifname team0 config '{"runner": {"name": "activebackup"}}'
+Connection 'team0' (5dc435ac-e4ac-403a-8e8f-163b163bf49b) successfully added.
+
+# nmcli con mod team0 ipv4.addresses '192.168.0.100/24'
+# nmcli con mod team0 ipv4.method manual
+
+# nmcli con add type team-slave con-name team0-port1 ifname eno1 master team0
+Connection 'team0-port1' (f5664c4e-1dba-43f8-8427-35aee0594ed3) successfully added.
+
+# nmcli con add type team-slave con-name team0-port2 ifname eno2 master team0
+Connection 'team0-port2' (174e4402-b169-47d1-859f-9a4b3f30000f) successfully added.
+
+# teamdctl team0 state
+setup:
+  runner: activebackup
+ports:
+  eno1
+    link watches:
+      link summary: up
+      instance[link_watch_0]:
+        name: ethtool
+        link: up
+  eno2
+    link watches:
+      link summary: up
+      instance[link_watch_0]:
+        name: ethtool
+        link: up
+runner:
+  active port: eno1
+
+# nmcli dev dis eno1
+# teamdctl team0 state
+setup:
+  runner: activebackup
+ports:
+  eno2
+    link watches:
+      link summary: up
+      instance[link_watch_0]:
+        name: ethtool
+        link: up
+runner:
+  active port: eno2
+
+# nmcli con up team0-port2
+Connection successfully activated (D-Bus active path: /org/freedesktop/NetworkManager/ActiveConnection/11)
+
+# teamdctl team0 state
+setup:
+  runner: activebackup
+ports:
+  eno1
+    link watches:
+      link summary: up
+      instance[link_watch_0]:
+        name: ethtool
+        link: up
+  eno2
+    link watches:
+      link summary: up
+      instance[link_watch_0]:
+        name: ethtool
+        link: up
+runner:
+  active port: eno1
+```
+
+
 ### 什么是桥接
 
 *    桥接(Bridging)是指依据OSI网络模型的链路层的地址，对网络数据包进行转发的过程，工作在OSI的第二层。一般的交换机，网桥就有桥接作用
