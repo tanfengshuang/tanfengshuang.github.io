@@ -1,0 +1,7 @@
+
+同时面向运维和开发的企业级PaaS平台--OpenShift:
+http://www.wtoutiao.com/p/18cWIcb.html
+
+OpenShift 3 : 基于docker的私有平台即服务:
+http://www.open-open.com/lib/view/open1438773232270.html
+

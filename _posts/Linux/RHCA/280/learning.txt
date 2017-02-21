@@ -1,0 +1,63 @@
+https://docs.openshift.com/enterprise/3.0/cli_reference/get_started_cli.html
+
+https://access.redhat.com/downloads/content/290/ver=3.4/rhel---7/3.4.1.5/x86_64/product-software
+
+
+
+
+
+
+
+
+
+
+
+Completed. Go to overview.
+Manage your app
+
+The web console is convenient, but if you need deeper control you may want to try our command line tools.
+Command line tools
+
+Download and install the oc command line tool. After that, you can start by logging in, switching to this particular project, and displaying an overview of it, by doing:
+
+oc login https://open.paas.redhat.com
+oc project ethel
+oc status
+
+For more information about the command line tools, check the CLI Reference and Basic CLI Operations.
+Making code changes
+
+
+A GitHub webhook trigger has been created for the account-management-tool build config.
+
+Your source does not appear to be a URL to a GitHub repository. If you have a GitHub repository that you want to trigger this build from then use the following payload URL:
+
+
+
+
+
+
+
+
+
+
+
+
+
+Application created. Continue to overview.
+Manage your app
+
+The web console is convenient, but if you need deeper control you may want to try our command line tools.
+Command line tools
+
+Download and install the oc command line tool. After that, you can start by logging in, switching to this particular project, and displaying an overview of it, by doing:
+
+oc login https://open.paas.redhat.com
+oc project ethel
+oc status
+
+For more information about the command line tools, check the CLI Reference and Basic CLI Operations.
+Applied Parameter Values
+
+These parameters often include things like passwords. If you will need to reference these values later, copy them to a safe location. Parameters HOSTNAME_HTTP, HOSTNAME_HTTPS, HTTPS_KEYSTORE_TYPE, HTTPS_NAME, HTTPS_PASSWORD, DB_MIN_POOL_SIZE, DB_MAX_POOL_SIZE, DB_TX_ISOLATION, JGROUPS_ENCRYPT_NAME, JGROUPS_ENCRYPT_PASSWORD, JGROUPS_CLUSTER_PASSWORD, SSO_REALM, SSO_SERVICE_USERNAME, SSO_SERVICE_PASSWORD, SSO_TRUSTSTORE, SSO_TRUSTSTORE_PASSWORD were generated automatically.
+
