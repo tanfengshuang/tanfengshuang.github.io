@@ -96,6 +96,7 @@ Running migrations:
 [2017-02-21 10:12:51 +0000] [45] [INFO] Booting worker with pid: 45
 [2017-02-21 10:12:51 +0000] [49] [INFO] Booting worker with pid: 49
 
+# oc port-forward -p mypod 1234:80
 ```
 
 ### Building a Pod
@@ -103,6 +104,14 @@ Running migrations:
 
 
 ### Enabling Services for a Pod
+
+###### Working with services
+
+Services are essential resources to any OSE application. They allow containers in one pod to open network connections to containers in other pod without one pod interfering on other pod life cycles. A pod may be restarted for many reasons, and will get a different internal IP each time. Instead of a pod having to discover other pods internal container network IPs after each restart, a service provides a stable IP address for other pods to connect, no matter what node runs the pod after each restart.
+
+Most real-world applications will not run as a single pod. They need to scale horizontally, so many pods run the same containers from the same pod resource definition to meet a growing user demand. A service is tied to a set of pods, providing a single IP address to the set and load-balancing client request among the member pods.
+
+The set of pods running behind a service is managed by a DeploymentConfig resource. A DeploymentConfig resource embeds a ReplicationController that manages how many pod copies (replicas) have to be created, and creates new ones if some of them fail, whatever the reason. DeploymentConfig and ReplicationControllers will be detailed presented later in this chapter, together with the Source-To-Image (S2I) process.
 
 
 
