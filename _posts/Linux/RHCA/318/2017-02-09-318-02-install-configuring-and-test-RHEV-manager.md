@@ -145,7 +145,7 @@ ovirt-engine (pid  7387) is running...
     # wget http://classroom.example.com/materials/rhevm.repo -P /etc/yum.repos.d/
     ...
     # yum repolist
-...
+    ...
 
 2. 更新所有现有的红帽企业 Linux 软件包（如果需要，请重新启动）。
 
@@ -341,7 +341,7 @@ ovirt-engine (pid  7387) is running...
 
 5. 将生成的回答文件复制到 workstation 来加以保存。
 
-    # scp /root/answers.txt student@workstation.podX.example.com:
+    # scp /root/answers.txt student@workstation.podX.example.com:/
     ...
 
 6. 验证 ovirt-engine 服务是否在运行：
@@ -425,24 +425,24 @@ Domain: example.com
 Manage Domains completed successfully
 ```
 
-3. 向用户 rhevadmin 授予超级用户权限。     
-使用 admin 用户名和 redhat 密码来登录 RHEV-M 管理门户。在顶部栏中，选择配置，再选择系统权限选项卡，然后单击添加按钮以创建新用户权限。    
-选择 example.com (example.com) 域，然后在搜索字段中键入 rhevadmin。用户显示在搜索字段中后，将其选中。    
+3. 向用户 rhevadmin 授予超级用户权限。
+使用 admin 用户名和 redhat 密码来登录 RHEV-M 管理门户。在顶部栏中，选择配置，再选择系统权限选项卡，然后单击添加按钮以创建新用户权限。
+选择 example.com (example.com) 域，然后在搜索字段中键入 rhevadmin。用户显示在搜索字段中后，将其选中。
 从下拉列表中，选择超级用户角色。单击确定以设置用户权限。
 
-4. 以 rhevadmin 身份登录来测试新的超级用户。    
+4. 以 rhevadmin 身份登录来测试新的超级用户。
 从右上角中，单击用户 example.com，然后单击注销以注销。使用 rhevadmin 用户名和 redhat 密码重新登录。选择 example.com 作为域。
 
-5. 只在虚拟机上创建允许基本操作和远程登录的新角色。    
-从右上角中，单击配置。在顶部栏中，从角色选项卡中，单击新建以定义新角色。    
-将新角色命名为 VMUserNoCD 并使用描述 use VMs, no CD。保持帐户类型设置为用户。扩展虚拟机树和基本操作树。确保仅选中基本操作和远程登录。    
+5. 只在虚拟机上创建允许基本操作和远程登录的新角色。
+从右上角中，单击配置。在顶部栏中，从角色选项卡中，单击新建以定义新角色。
+将新角色命名为 VMUserNoCD 并使用描述 use VMs, no CD。保持帐户类型设置为用户。扩展虚拟机树和基本操作树。确保仅选中基本操作和远程登录。
 单击确定，以确认添加此新角色。您将在下一步将此权限添加至对象。
 
-6. 创建另外一个用户并为其授予相应权限。    
-配置对话框仍然打开时，导航到系统权限选项卡。单击添加以添加新系统用户。    
+6. 创建另外一个用户并为其授予相应权限。
+配置对话框仍然打开时，导航到系统权限选项卡。单击添加以添加新系统用户。
 确保将搜索设置为 example.com 并输入 vmadminX 作为搜索项，其中 X 为您的 pod 号。在结果窗口中，在 vmadminX 前放置选中标记。从分配角色到用户下拉菜单中选择 PowerUserRole。单击确定以确认添加。
 
-7. 创建另外一个用户并为其授予相应权限。    
+7. 创建另外一个用户并为其授予相应权限。
 单击系统权限选项卡，然后单击添加以添加新用户。在 example.com 域中搜索 rheluserX（确保将 X 替换为您的工作站编号），并给此帐户分配先前创建的 VMUserNoCD 角色。单击确定之前，不要忘记选中 rheluserX 前面的复选框。
 
 8. 在 workstation.podX.example.com 上，安装 spice-xpi 软件包。
@@ -451,7 +451,7 @@ Manage Domains completed successfully
 
 9. 如果您已在 workstation.podX.example.com 上打开 Firefox，则将其关闭。
 
-10. 在 workstation.podX.example.com 上启动新的 Firefox 实例并导航到 https://rhevm.podX.example.com。单击用户门户，以导航到 RHEV-M 用户门户。    
+10. 在 workstation.podX.example.com 上启动新的 Firefox 实例并导航到 https://rhevm.podX.example.com。单击用户门户，以导航到 RHEV-M 用户门户。
 在 Firefox 提供的错误页面上：
 
 *    单击我了解风险以扩展 Firefox 中的证书异常对话框。
@@ -459,7 +459,7 @@ Manage Domains completed successfully
 *    在出现的弹出框中，单击获取证书按钮。
 *    选择弹出窗口底部的确认安全例外。
 
-11. 确保您可以使用新定义的角色来登录。    
+11. 确保您可以使用新定义的角色来登录。
 使用 vmadminX 用户名和 redhat 密码登录。确保选择 example.com 作为域。
 
 
@@ -656,8 +656,7 @@ Starting engine-service:                                   [  OK  ]
 4. 重置 redhat 的 admin@internal 密码。
 
 ```
-[root@rhevm ~]# engine-config -s
-AdminPassword=interactive
+[root@rhevm ~]# engine-config -s AdminPassword=interactive
 Please enter a password: redhat
 Please reenter password: redhat
 [root@rhevm ~]# service ovirt-engine restart
