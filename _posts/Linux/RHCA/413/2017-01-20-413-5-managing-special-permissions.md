@@ -56,8 +56,8 @@ none on /proc/sys/fs/binfmt_misc type binfmt_misc (rw)
 1. 设置uid
 # cd /mnt/myencryptdisk/ 
 # cp /usr/bin/vim ./newvim
-# ./newvim /etc/passwd          -> root能编辑
-# ./newvim /etc/shadow          -> root能编辑
+# ./newvim /etc/passwd          -> root能编辑，修改
+# ./newvim /etc/shadow          -> root能编辑，修改
 # ll /etc/shadow
 ----------. 1 root root 933 Jan 20 00:36 /etc/shadow
 # ls -ld /etc/

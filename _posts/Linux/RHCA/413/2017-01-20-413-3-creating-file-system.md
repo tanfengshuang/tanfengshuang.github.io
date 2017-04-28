@@ -59,8 +59,8 @@ name    /dev/vda2   /path/to/password/file
 手动使用加密磁盘
 # lvs
   LV      VG               Attr       LSize  Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
-  lv_home vg_cloudqe16vm02 -wi-ao---- 10.00g                                                    
-  lv_root vg_cloudqe16vm02 -wi-ao---- 50.00g                                                    
+  lv_home vg_cloudqe16vm02 -wi-ao---- 10.00g
+  lv_root vg_cloudqe16vm02 -wi-ao---- 50.00g
   lv_swap vg_cloudqe16vm02 -wi-ao----  3.94g 
 
 # vgs
@@ -81,9 +81,9 @@ name    /dev/vda2   /path/to/password/file
 
 # lvs
   LV      VG               Attr       LSize   Pool Origin Data%  Meta%  Move Log Cpy%Sync Convert
-  lv_home vg_cloudqe16vm02 -wi-ao----  10.00g                                                    
-  lv_root vg_cloudqe16vm02 -wi-ao----  50.00g                                                    
-  lv_swap vg_cloudqe16vm02 -wi-ao----   3.94g                                                    
+  lv_home vg_cloudqe16vm02 -wi-ao----  10.00g
+  lv_root vg_cloudqe16vm02 -wi-ao----  50.00g
+  lv_swap vg_cloudqe16vm02 -wi-ao----   3.94g
   mylv1   vg_cloudqe16vm02 -wi-a----- 100.00m 
 
 # ls /dev/vg_cloudqe16vm02/mylv1 
@@ -122,7 +122,7 @@ Maximum filesystem blocks=67371008
 Superblock backups stored on blocks: 
     8193, 24577, 40961, 57345, 73729
 
-Writing inode tables: done                            
+Writing inode tables: done
 Creating journal (4096 blocks): done
 Writing superblocks and filesystem accounting information: done
 
@@ -141,7 +141,7 @@ abc  lost+found
 
 # ls /mnt/myencryptdisk
 # mount /dev/mapper/
-control                   vg_cloudqe16vm02-lv_home  vg_cloudqe16vm02-lv_root  vg_cloudqe16vm02-lv_swap  vg_cloudqe16vm02-mylv1    
+control                   vg_cloudqe16vm02-lv_home  vg_cloudqe16vm02-lv_root  vg_cloudqe16vm02-lv_swap  vg_cloudqe16vm02-mylv1
 # mount /dev/mapper/vg_cloudqe16vm02-mylv1 /mnt/myencryptdisk
 mount: unknown filesystem type 'crypto_LUKS'
 
@@ -162,7 +162,7 @@ mount: unknown filesystem type 'crypto_LUKS'
 # file /etc/password1
 /etc/password1: data
 
-2. 
+2. 修改/etc/crypttab使其开机时使用密码文件，自动解密
 # cryptsetup luksAddKey /dev/vg_cloudqe16vm02/mylv1 /etc/password1
 Enter any passphrase: 
 # vim /etc/crypttab

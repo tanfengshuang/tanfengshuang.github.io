@@ -72,11 +72,11 @@ session    include      password-auth
 
 ###### /etc/pam.d/ Configuration File Syntax
 
-*    PAM配置文件(/etc/pam.d/*)的每一行的格式：Module-type   Control-flag   Module-path   Arguments 
+>    PAM配置文件(/etc/pam.d/*)的每一行的格式：Module-type   Control-flag   Module-path   Arguments 
 
 PAM Rule Types
 
-*    auth: 表示鉴别类接口模块类型用于检查用户和密码，并分配权限; 这种类型的模块为用户验证提供两方面服务。让应用程序提示用户输入密码或者其他标记，确认用户合法性；通过他的凭证许可权限，设定组成员关系或者其他优先权。
+*    auth: 表示鉴别类接口模块类型, 用于检查用户和密码，并分配权限; 这种类型的模块为用户验证提供两方面服务。让应用程序提示用户输入密码或者其他标记，确认用户合法性；通过他的凭证许可权限，设定组成员关系或者其他优先权。
 *    account: 表示账户类接口，主要负责账户合法性检查，确认帐号是否过期，是否有权限登录系统等；这种模块执行的是基于非验证的帐号管理。他主要用于限制/允许用户对某个服务的访问时间，当前有效的系统资源（最多可以多少用户），限制用户位置（例如：root只能通过控制台登录）。
 *    password: 口令类接口。控制用户更改密码的全过程。也就是有些资料所说的升级用户验证标记。
 *    session: 会话类接口。实现从用户登录成功到退出的会话控制；处理为用户提供服务之前/后需要做的些事情。包括：开启/关闭交换数据的信息，监视目录等，设置用户会话环境等。也就是说这是在系统正式进行服务提供之前的最后一道关口。
@@ -367,8 +367,6 @@ Jan 22 07:02:15 cloud-qe-16-vm-02 sshd[3557]: pam_limits(sshd:session): Too many
 Jan 22 07:02:15 cloud-qe-16-vm-02 sshd[3557]: pam_unix(sshd:session): session opened for user test by (uid=0)
 Jan 22 07:02:15 cloud-qe-16-vm-02 sshd[3557]: error: PAM: pam_open_session(): Permission denied
 Jan 22 07:02:16 cloud-qe-16-vm-02 sshd[3561]: Received disconnect from 10.66.129.74: 11: disconnected by user
-
-# 
 ```
 
 ```

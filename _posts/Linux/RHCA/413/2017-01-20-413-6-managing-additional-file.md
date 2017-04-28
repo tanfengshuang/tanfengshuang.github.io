@@ -69,7 +69,7 @@ drwxr--r--. 2 student student 4096 Jan 20 05:37 studentdir
 dir     -> 777 - 033
 rwxrwxrwx
 ----wx-wx
-rwxr--r--   
+rwxr--r--
 
 file    -> 666 - 033
 rw-rw-rw-
@@ -123,7 +123,7 @@ Default mount options:    (none)
 Filesystem        1K-blocks  Used Available Use% Mounted on
 /dev/mapper/disk1     93071  3823     84231   5% /mnt/myencryptdisk
 
-# # mount -o remount,rw /mnt/myencryptdisk/         --> 取消acl的临时挂载
+# mount -o remount,rw /mnt/myencryptdisk/         --> 取消acl的临时挂载
 # mount
 /dev/mapper/vg_cloudqe16vm02-lv_root on / type ext4 (rw)
 proc on /proc type proc (rw)

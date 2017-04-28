@@ -7,7 +7,7 @@ tags: 413 aide prelink
 
 ### Using Intrusion Detection Software to Monitor Changes
 
-AIDE(Adevanced Intrusion Detection Environment,高级入侵检测环境)是个入侵检测工具，主要用途是检查文档的完整性。       
+AIDE(Advanced Intrusion Detection Environment,高级入侵检测环境)是个入侵检测工具，主要用途是检查文档的完整性。
 AIDE能够构造一个指定文档的数据库，他使用aide.conf作为其配置文档。AIDE数据库能够保存文档的各种属性，使用下列算法：sha1、md5、rmd160、tiger，以密文形式建立每个文档的校验码或散列号。系统管理员应该建立新系统的AIDE数据库。这第一个AIDE数据库是系统的一个快照和以后系统升级的准绳。这个数据库不应该保存那些经常变动的文档信息，例如：日志文档、邮件、/proc文档系统、用户起始目录连同临时目录。
 
 aide是一个Tipwire的替代和扩展软件，它有一些Tripwire所不具备的特征。aide当前具备的特征包括：多种完整性检验算法、把数据库输出到标准输出设备/文件的能力、通过配置文件进行配置以及数据库压缩支持。将来aide会提高更多的特征。 
@@ -49,7 +49,7 @@ AIDE默认的组有以下这些：
 *    gost   gost校验
 
 
-*    /dir1   group      -> 忽略/dev目录 
+*    /dir1   group      -> 检查/dir1目录和其子目录
 *    =/dir2  group      -> 只把/dir2目录加入到数据库，不包括其子目录
 *    !/dir3  group      -> 忽略/dir3目录
 
