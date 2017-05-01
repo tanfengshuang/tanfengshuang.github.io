@@ -157,7 +157,7 @@ Swap:  4128764k total,        0k used,  4128764k free,   607708k cached
   PID USER      PR  NI  VIRT  RES  SHR S %CPU %MEM    TIME+  COMMAND
 27370 root      RT   0  103m 1132  968 R 100.0  0.1   0:16.41 sh
     1 root      20   0 19368 1512 1192 S  0.0  0.1   0:00.97 init
-    2 root      20   0     0    0    0 S  0.0  0.0   0:00.08 kthreadd  
+    2 root      20   0     0    0    0 S  0.0  0.0   0:00.08 kthreadd
     3 root      RT   0     0    0    0 S  0.0  0.0   0:01.19 migration/0
     4 root      20   0     0    0    0 S  0.0  0.0   0:00.07 ksoftirqd/0 
 

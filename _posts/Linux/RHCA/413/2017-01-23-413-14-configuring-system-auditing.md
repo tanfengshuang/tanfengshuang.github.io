@@ -116,6 +116,17 @@ Tue Jan 24 22:05:45 EST 2017
 
 ```
 
+*    uid　　　　　　用户ID。
+*    euid　　　　　有效用户ID。
+*    suid  　　　　设置用户ID。
+*    fsuid 　　　　文件系统用户ID。
+*    gid　　　　　　组ID。
+*    egid　　　　　　有效组ID。
+*    sgid　　　　　　设置组ID。
+*    fsgid　　　　　文件系统组ID。
+*    auid　　　　　　审计ID，或者用户登录时使用的原始ID。
+
+
 ###### Searching for Events
 
 > ausearch
@@ -421,7 +432,7 @@ No rules
 
 ###### Immutable Rules
 
-> auditctl -s [012]
+> auditctl -e [012]
 
 *   0: disable auditing
 *   1: enables auditing again
@@ -509,7 +520,7 @@ fi
 exit 0
 
 # cp /usr/share/doc/audit-2.4.5/auditd.cron /etc/cron
-cron.d/       cron.daily/   cron.deny     cron.hourly/  cron.monthly/ crontab       cron.weekly/  
+cron.d/       cron.daily/   cron.deny     cron.hourly/  cron.monthly/ crontab       cron.weekly/
 # cp /usr/share/doc/audit-2.4.5/auditd.cron /etc/cron.daily/
 ```
 
@@ -520,4 +531,42 @@ There are 2 main ways to send audit messages to a remote system.both methods use
 ### Unit Test: Implementing a Custom Audit Policy
 
 
+### audit 规则设置
+
+1. audit系统规则设置：
+
+*    -s 或者auditd 状态 auditctl -s 显示：AUDIT_STATUS: enabled=1 flag=1 pid=2792 rate_limit=0 backlog_limit=320 lost=0 backlog=0
+*    -e [0|1|2] 设置audit使能标识， 0 表示临时关闭audit，1 表示启用audit，2表示锁住audit规则配置文件，这条命令一般设这在audit.rules的最后一条，任何人试图修改audit规则都会被记录，并且禁止修改。我们先运行auditctl -e 1 显示：AUDIT_STATUS: enabled=1 flag=1 pid=2792 rate_limit=0 backlog_limit=320 lost=0 backlog=0；我们运行auditctl -e 0 显示AUDIT_STATUS: enabled=0 flag=1 pid=2792 rate_limit=0 backlog_limit=320 lost=0 backlog=0 这里我们看到不同的参数只是修改了enabled项
+*    -f [0|1|2]控制失败标识。也就flag位，这个位的主要作用是This option lets you determine how you want the kernel  to  handle  critical  errors
+*    -r 设置速率，也就是每秒钟消息数目，非0的话如果系统在1秒钟大于设定的值，就会触发系统flag标识的行为
+*    -b 设置backlog_limit
+
+2. 文件系统audit设置：
+
+*    -w path path是一个文件或者目录的绝对路径。
+*    -p [r|w|x|a] 和-w一起使用，监测用户对这个目录的读 写 执行 或者属性变化如时间戳变化。
+*    -k 指定一个key，在ausearch的时候使用
+
+3. 系统调用的监控：
+
+*    -a 添加一条系统调用监控规则， action(always,never),list(task,entry,exit,user,exclude)
+*    -S 后面接需要监测的系统调用的名称
+
+4. 显示规则和移除规则：
+
+*    -D 删除所有规则
+*    -d 删除一条规则和-a对应
+*    -W 删除一条规则和-w对应
+*    -l 列出所有规则
+
+```
+1. To watch a file for changes (2 ways to express):
+# auditctl -w /etc/shadow -p wa
+# auditctl -a exit,always -F path=/etc/shadow -F perm=wa
+
+2. To recursively watch a directory for changes (2 ways to express):
+# auditctl -w /etc/ -p wa
+# auditctl -a exit,always -F dir=/etc/ -F perm=wa
+
+```
 

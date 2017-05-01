@@ -115,9 +115,10 @@ u1              hard    maxlogins       2
 
 ###### rss limit is currently not enforceable on Red Hat Enterprise Linux System
 
+
 ### Using Control Groups (CGroups)
 
-Control groups: RHEL6 introduces a new, more flexible way of limiting access to system resources.    
+Control groups: RHEL6 introduces a new, more flexible way of limiting access to system resources.
 Control groups subdivided your resources into controllers:
 
 *    blkio - sets limits on the available bandwidth to and from block devices
@@ -399,8 +400,8 @@ Reloading rules configuration...
 
 ###### Persistently Create a Control Group
 
-In this exercise you will persistently create a Control group named bigload that will limit its processes to no more than 1MiB/s of read throughput on your primary disk.    
-The syntax for blkio.throttle.read_bps_device is MAJOR:MINOR Bytes/s.    
+In this exercise you will persistently create a Control group named bigload that will limit its processes to no more than 1MiB/s of read throughput on your primary disk.
+The syntax for blkio.throttle.read_bps_device is MAJOR:MINOR Bytes/s.
 Futhermore any process called dd should automatically be put in your bigload Control Group
 
 ```

@@ -201,7 +201,7 @@ sda                              8:0    0 465.8G  0 disk
   ├─fedora_dhcp--129--221-root 253:0    0    50G  0 lvm  /
   ├─fedora_dhcp--129--221-swap 253:1    0   7.9G  0 lvm  [SWAP]
   └─fedora_dhcp--129--221-home 253:2    0 407.4G  0 lvm  /home
-sr0                             11:0    1  1024M  0 rom  
+sr0                             11:0    1  1024M  0 rom
 ```
 
 ######

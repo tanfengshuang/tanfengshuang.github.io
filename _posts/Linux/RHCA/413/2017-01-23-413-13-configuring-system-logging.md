@@ -30,12 +30,12 @@ Linux上通常可以通过rsyslog来实现系统日志的集中管理，这种�
 ###### Using Rulesets to Divide Local and Remote Logs
 
 ```
-# vim /etc/syslog.conf
+# vim /etc/rsyslog.conf
 *.* @@(o) Server-IP:portN
 
 # vim /etc/rsyslog.d/1.conf
 :fromhost-ip, isequal, "Client-IP1"     /var/log/dir1/messages
-:fromhost-ip, isequal, "Client-IP2"     /var/log/dir1/messages
+:fromhost-ip, isequal, "Client-IP2"     /var/log/dir2/messages
 ```
 
 ###### Performance Checklist: Secure Logging with rsyslog

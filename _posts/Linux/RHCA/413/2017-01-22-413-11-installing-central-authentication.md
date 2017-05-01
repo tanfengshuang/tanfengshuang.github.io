@@ -286,14 +286,14 @@ user-unlock                      Unlock a user account
 
 ```
 # netstat -antlup | grep 123
-udp        0      0 10.16.98.103:123            0.0.0.0:*                               10097/ntpd          
-udp        0      0 127.0.0.1:123               0.0.0.0:*                               10097/ntpd          
-udp        0      0 0.0.0.0:123                 0.0.0.0:*                               10097/ntpd          
-udp        0      0 2620:52:0:1060:5054:ff:f:123 :::*                                    10097/ntpd          
-udp        0      0 fec0:0:a10:6000:5054:ff::123 :::*                                    10097/ntpd          
-udp        0      0 fe80::5054:ff:fe40:5804:123 :::*                                    10097/ntpd          
-udp        0      0 ::1:123                     :::*                                    10097/ntpd          
-udp        0      0 :::123                      :::*                                    10097/ntpd   
+udp        0      0 10.16.98.103:123            0.0.0.0:*                               10097/ntpd 
+udp        0      0 127.0.0.1:123               0.0.0.0:*                               10097/ntpd 
+udp        0      0 0.0.0.0:123                 0.0.0.0:*                               10097/ntpd 
+udp        0      0 2620:52:0:1060:5054:ff:f:123 :::*                                    10097/ntpd 
+udp        0      0 fec0:0:a10:6000:5054:ff::123 :::*                                    10097/ntpd 
+udp        0      0 fe80::5054:ff:fe40:5804:123 :::*                                    10097/ntpd
+udp        0      0 ::1:123                     :::*                                    10097/ntpd
+udp        0      0 :::123                      :::*                                    10097/ntpd
 
 # ipa-server-install --help
 Usage: ipa-server-install [options]
@@ -755,19 +755,20 @@ admin: 87654321
 
 ### Install Identity Management Client
 
-1. Perform prerequisite steps by opening necessary ports in the firewall. System ports for IdM services include HTTP/HTTPS (80/tcp and 443/tcp), LDAP/LDAPS(389/tcp and 636/tcp), Kerberos (88 and 464, both tcp and udp), DNS (53, both tcp and udp), NTP (123/udp), and Certificate System (7389/tcp).    
+1. Perform prerequisite steps by opening necessary ports in the firewall. System ports for IdM services include HTTP/HTTPS (80/tcp and 443/tcp), LDAP/LDAPS(389/tcp and 636/tcp), Kerberos (88 and 464, both tcp and udp), DNS (53, both tcp and udp), NTP (123/udp), and Certificate System (7389/tcp).
+
 If the IdM server was configured as the DNS server, ensure that the client machine points to the IdM server first for DNS by making it the first entry in /etc/resolv.conf.
 
 ```
 # iptables -nvL
 Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
- pkts bytes target     prot opt in     out     source               destination         
+ pkts bytes target     prot opt in     out     source               destination 
 
 Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
- pkts bytes target     prot opt in     out     source               destination         
+ pkts bytes target     prot opt in     out     source               destination 
 
 Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
- pkts bytes target     prot opt in     out     source               destination       
+ pkts bytes target     prot opt in     out     source               destination 
 ```
 
 2. Install IdM client packages. Installing ipa-client will typically install a number dependencies. If the IdM client will also function as an administrator machine, then you must install one additional package: ipa-admintools
@@ -913,7 +914,63 @@ Connection to cloud-qe-16-vm-04.idmqe.lab.eng.bos.redhat.com closed.
 /home/tmunsom
 ```
 
+```
+# ipa-client-install --help
+Usage: ipa-client-install [options]
 
+Options:
+  --version             show program's version number and exit
+  -h, --help            show this help message and exit
+
+  basic options:
+    --domain=DOMAIN     domain name
+    --server=SERVER     IPA server
+    --realm=REALM_NAME  realm name
+    --fixed-primary     Configure sssd to use fixed server as primary IPA
+                        server
+    -p PRINCIPAL, --principal=PRINCIPAL
+                        principal to use to join the IPA realm
+    -w PASSWORD, --password=PASSWORD
+                        password to join the IPA realm (assumes bulk password
+                        unless principal is also set)
+    -W                  Prompt for a password to join the IPA realm
+    --mkhomedir         create home directories for users on their first login
+    --hostname=HOSTNAME
+                        The hostname of this machine (FQDN). If specified, the
+                        hostname will be set and the system configuration will
+                        be updated to persist over reboot. By default a
+                        nodename result from uname(2) is used.
+    --ntp-server=NTP_SERVER
+                        ntp server to use
+    -N, --no-ntp        do not configure ntp
+    --ssh-trust-dns     configure OpenSSH client to trust DNS SSHFP records
+    --no-ssh            do not configure OpenSSH client
+    --no-sshd           do not configure OpenSSH server
+    --no-dns-sshfp      do not automatically create DNS SSHFP records
+    --noac              do not use Authconfig to modify the nsswitch.conf and
+                        PAM configuration
+    -f, --force         force setting of LDAP/Kerberos conf
+    -d, --debug         print debugging information
+    -U, --unattended    unattended (un)installation never prompts the user
+    --ca-cert-file=CA_CERT_FILE
+                        load the CA certificate from this file
+
+  SSSD options:
+    --permit            disable access rules by default, permit all access.
+    --enable-dns-updates
+                        Configures the machine to attempt dns updates when the
+                        ip address changes.
+    --no-krb5-offline-passwords
+                        Configure SSSD not to store user password when the
+                        server is offline
+    -S, --no-sssd       Do not configure the client to use SSSD for
+                        authentication
+    --preserve-sssd     Preserve old SSSD configuration if possible
+
+  uninstall options:
+    --uninstall         uninstall an existing installation. The uninstall can
+                        be run with --unattended option
+```
 
 
 ###### Workshop: Install Identity Management Client

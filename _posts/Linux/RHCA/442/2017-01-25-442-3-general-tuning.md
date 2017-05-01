@@ -79,7 +79,7 @@ author:         Matthew Dharm <mdharm-usb@one-eyed-alien.net>
 srcversion:     27463E0913E4C1933B5817F
 alias:          usb:v03EBp2002d0100dc*dsc*dp*ic*isc*ip*
 ...
-depends:        
+depends:
 vermagic:       2.6.32-642.el6.x86_64 SMP mod_unload modversions 
 parm:           option_zero_cd:ZeroCD mode (1=Force Modem (default), 2=Allow CD-Rom (uint)
 parm:           swi_tru_install:TRU-Install mode (1=Full Logic (def), 2=Force CD-Rom, 3=Force Modem) (uint)
@@ -332,7 +332,7 @@ tmpfs                 985M     0  985M   0% /dev/shm
 /dev/mapper/vg_cloudqe16vm01-lv_home
                        27G   47M   26G   1% /home
 # e2freefrag /dev/vda       -> report free space fragmentation information
-vda   vda1  vda2  
+vda   vda1  vda2
 # e2freefrag /dev/vda1
 Device: /dev/vda1
 Blocksize: 1024 bytes

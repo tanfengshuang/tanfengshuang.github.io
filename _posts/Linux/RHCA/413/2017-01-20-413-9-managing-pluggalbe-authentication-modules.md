@@ -391,6 +391,23 @@ Jan 22 07:09:52 cloud-qe-16-vm-02 sshd[3583]: error: do_exec_pty: fork: Resource
 Jan 22 07:09:52 cloud-qe-16-vm-02 sshd[3579]: pam_unix(sshd:session): session closed for user test
 ```
 
+###### ulimit
+
+*    -H 设置硬资源限制.
+*    -S 设置软资源限制.
+*    -a 显示当前所有的资源限制.
+*    -c size:设置core文件的最大值.单位:blocks
+*    -d size:设置数据段的最大值.单位:kbytes
+*    -f size:设置创建文件的最大值.单位:blocks
+*    -l size:设置在内存中锁定进程的最大值.单位:kbytes
+*    -m size:设置可以使用的常驻内存的最大值.单位:kbytes
+*    -n size:设置内核可以同时打开的文件描述符的最大值.单位:n
+*    -p size:设置管道缓冲区的最大值.单位:kbytes
+*    -s size:设置堆栈的最大值.单位:kbytes
+*    -t size:设置CPU使用时间的最大上限.单位:seconds
+*    -v size:设置虚拟内存的最大值.单位:kbytes
+*    -u <程序数目> 　用户最多可开启的程序数目
+
 ```
 # ulimit 
 unlimited
@@ -452,6 +469,13 @@ SYNOPSIS
 *    pam_tally2 --user test               ## 查看test用户登录的错误次数及详细信息
 *    pam_tally2 --user test --reset       ## 清空test用户的错误登录次数，即手动解锁, 使用faillog -r命令也可以进行解锁
 
+*    /etc/pam.d/login中配置只在本地文本终端上做限制；
+*    /etc/pam.d/kde在配置时在kde图形界面调用时限制；
+*    /etc/pam.d/sshd中配置时在通过ssh连接时做限制；
+*    /etc/pam.d/system-auth中配置凡是调用 system-auth 文件的服务，都会生效。
+
+> pam_tally2与pam_tally模块的区别是前者增加了自动解锁时间的功能，后者没有。所以在老的发行版中，如果使用了pam_tally模块时，可以使用pam_tally 、faillog配合crontab 进行自动解锁。
+
 ```
 # vim /etc/pam.d/system-auth
 auth        required      pam_tally2.so deny=3 unlock_time=180
@@ -463,7 +487,7 @@ account     required      pam_tally2.so
 
 # pam_tally2 --user test 
 Login           Failures Latest failure     From
-test                0    
+test                0
 
 # ssh test@...          -> 输入错误密码3次后，以后再输入正确密码也不能成功登录了
 

@@ -380,7 +380,7 @@ Filename				Type		Size	Used	Priority
 /dev/dm-1                               partition	4128764	0	-1
 
 # vim /etc/fstab
-/dev/mapper/vg_cloudqe16vm01-lv_swap swap                    swap    defaults        0 0
+/dev/mapper/vg_cloudqe16vm01-lv_swap    swap   swap    defaults        0 0
 
 # swapon -p 1 /dev/vdb1
 # swapon -p 2 /dev/vdb2

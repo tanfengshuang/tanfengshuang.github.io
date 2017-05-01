@@ -1,0 +1,111 @@
+1. Diagnose and correct a dynamic inventory
+   On ansible.lab7.example.com modify your Ansible configuration to include the dynamic inventory from /opt/ansible/inventory/dynamic. Once the inventory has been added, verify that the nodes attached to the groups marzipan, bunnies and newbunnies all are accessible. You must debug any errors or issues that may exist in the inventory directory or files. You are allowed to rename the dynamic scripts or make changes as needed. It is your responsibility to make sure all existing host entries and group definitions remain with the dynamic inventory.
+   Additionaly you must add timeout = 60 under the [defaults] section in your Ansible configuration.
+   You may wish to use test cases with playbooks or ad-hoc commands to confirm you can reach the groups definded by the dynamic inventory.
+
+2. Install a service on multiple systems
+   Create a playbook on ansible.lab7.example.com called /home/ansible/playbooks/httpd.yml that does the following:
+   1). Installs the httpd packages
+   2). Starts the httpd service
+   3). Configures the httpd service to always start at system boot on all four nodes
+   4). Uses the core get_url Ansible method to fetch the file http://rhgls.lab7.example.com/material/httpd.conf.template and copy it to /etc/httpd/conf/httpd.conf
+   5). Uses the core "lineinfile" Anislbe method to customize the /var/www/html/index.html file for each node to contain the string "Hello from XXX" where XXX refers to node1, node2, node3, or node4 depneding on the node in question. This text should be appended to any existing text in the index.html file
+   Once the playbook has been run, it should be possible to connect to any one of the managed nodes with a web client and get an index page that has the customized string for that node.
+   
+3. Create a password protected area
+   Create a playbook on ansible.lab7.example.com called /home/ansible/playbooks/httpd_auth.yml that does the following:
+   1). Runs on all four managed nodes
+   2). Creates the directory /var/www/html/protected with the proper permissions to allow access from a web browser.
+   3). Uses the Ansible get_url method to fetch http://rhgls.lab7.example.com/materials/httpd.htaccess into /var/www/html/protected/.htaccess and similarly fetches http://rhgls.lab7.example.com/materials/httpd.htpasswd into /var/www/html/protected/.htpasswd
+   4). Sets the permissions for /var/www/html/protected/.htaccess and /var/www/html/protected/.htpasswd so that they are readable by the apache user
+   5). Modifies /etc/httpd/conf/httpd.conf to grant "AuthConfig" access to all "AllowOverride" locations to enable access authorization by using the Ansible core replace module to search for all occurrences of "AllowOverride Name" and replace it with "AllowOverride AuthConfig"
+   6). Creates the file /var/www/html/protected/index.html with a single line of text that reads: "This node node# is protected." where node# is one of node1, node2, node3, or node4 respectively for each managed node
+   7). Restarts the httpd service
+   If the playbook runs correctly the httpd service should prompt for a username and password when you attempt to access /var/www/html/protected on any of the managed nodes.
+   If you copied the access files as specified above correctly you should be able to authenticate using  the userid "ansi" and password "ansible"
+   
+4. Use custom groups
+   Define the groups production and backup on your Ansible control node.
+   Group production should contain the nodes node1 and node2. Group backup should contain the nodes node3 and node4.
+   Create a playbook on ansible.lab7.exmaple.com called /home/ansible/playbooks/webproduction.yml that does the following:
+   1). For nodes in group production, creates a gzipped tarball named /var/tmp/production.tar.gz that contains the contents of /var/www/html
+   2). For nodes in group backup, creates a gzipped tarball named /var/log/backup.tar.gz that contains the contents of /var/log/httpd
+   
+5. Create script that runs Ansible commands
+   On ansible.lab7.example.com create a shell script, /home/ansible/playbooks/adhoc.sh, that uses ad-hoc Ansible commands to do the following: 
+   1). Copies the file /usr/local/bin/runme.sh from the Ansible host to the destination /usr/bin/runme.sh on all four managed nodes
+   2). Sets the permissions of /usr/bin/runme.sh to 0755
+   3). Sets the owner and group of /usr/bin/runme.sh to ansible
+   4). Executes the script /usr/bin/runme.sh on all four managed nodes as the user ansible
+   5). The script should use privilege escalation where required
+   6). The permission on adhoc.sh should be 0755
+
+6. Selectively run tasks
+   Create a playbook on ansible.lab7.example.com called /home/ansible/playbooks/ping.yml that does the following:
+   1). The file /var/tmp/ans.txt is on ansible.lab7.example.com
+   2). Where runs as /home/ansible/playbooks --tags "nodegroup1" the playbook copies the file /var/tmp/ans.txt to the destination file /var/www/html/tag1.html on node node1 and node node2
+   2). Where runs as /home/ansible/playbooks --tags "nodegroup2" the playbook copies the file /var/tmp/ans.txt to the destination file /var/www/html/tag2.html on node node3 and node node4
+
+7. Handle inaccessable information
+   Create a playbook on ansible.lab7.example.com called /home/ansible/playbooks/inaccess.yml that does the following:
+   1). Runs on all managed nodes
+   2). Uses a block group that attempts to copy the file at http://rhgls.lab7.example.com/materials/inaccess.html to /var/www/html/inaccess.html
+   3). If the copy fails, uses a rescue group to copy the text "I did not have access to the url" to the file /var/www/html/inaccess.html
+
+8. Create a playbook that selectively updateds files
+   Create a playbook on ansible.lab7.example.com called /home/ansible/playbooks/saveabort.yml that does the following:
+   1). Runs on all managed nodes
+   2). Attempts to create a file named /etc/ansible_abort.txt that contains the content "my node is also node#" where node# should be set to node1, node2, node3, or node4 depending on the node the playbook is being run against subject to the restriction listed below
+   3) If the file /etc/ansible_abort.txt, already exists the playbook should not modify the file or should revert it to its previous state. You may use any method you wish as long as an existing file is not changed after the playbook has been run
+
+9. Selectively contorl a service
+   Create a playbook on ansible.lab7.example.com called /home/ansible/playbooks/block.yml that does the following:
+   1). block
+   2). rescue
+
+10. Set up a role using Ansible Galaxy
+    Create a playbook on ansible.lab7.example.com called /home/ansible/playbooks/galaxy_install.yml that does the following:
+    1). Uses ansible-galaxy to install the role at http://rhgls.lab7.example.com/materials/examfun.tar.gz
+    2). Installs the role into /home/ansible/playbooks/roles/examfun
+    3). Note that /home/ansible/playbooks/roles must be defined as the role directory in your Ansible configuration on your control node
+    4). You must also set timeout = 60 under the [defaults] section in your Ansible configuration on your control node
+
+11. Create user accounts
+    Create a playbook on ansible.lab7.example.com called /home/ansible/playbooks/users.yml that does the following:
+    1). Creates the unix groups staff, guests and webclients on all managed nodes
+    2). Utilizes variables that contain a list of usernames definded in the role examfun that you created in an earlier item with ansible-galaxy
+    3). Creates user accounts for users in the staff list and assigns them to the groups staff and webclients on all managed nodes
+    4). Creates user accounts for users in the guests list and assigns them to the groups guests and webclients on all managed nodes
+    5). Removes users in revoked list on all managed nodes
+    6). You do not need to set password for the users
+
+12. Create a playbook to display host information
+    Create a playbook on ansible.lab7.example.com called /home/ansible/playbooks/ansible.yml that does the following:
+    1). The playbook should run on all four managed nodes
+    2). The playbook should create a one line file called /var/www/html/ansible_details.html with a single line that contains the following host information:
+        The short hostname of the managed node
+        The phsical processor count on the managed node
+        The IPV4 address for the default NIC for the managed node
+        The MAC address for the default NIC for the managed node
+    The items must be displayed in the order in which they are listed above
+    Example output: node7 4 123.123.123.123 DE:AD...EE:EF
+
+13. Create a playbook to handle sensitive data
+    Create a playbook on ansible.lab7.example.com called /home/ansible/playbooks/vault.yml that does the following:
+    1). Uses the vault file crypt.yml(described below) to access the variable password
+    2). Uses the value of password as the clear text password required to unzip the contents of the encrypted zip file vault.zip which is located at http://rhgls.lab7.exmaple.com/materials/vault.zip into the directory /var/www/html/vault on nodes node2 and node4
+    3). To unzip the file, use "unzip -o -P password" where password is the varaible that will contain the password to the zip file 
+    4). Authenticates with the password file /home/ansible/playbooks/.vaultpwd to run the playbook
+    Vault information:
+    1). The encrypted vault YML file should be called crypt.yml and placed in /home/ansible/playbooks
+    2). The vault should be encrypted with the password ansiansi. This password should be stored as plain text in the file /home/ansible/playbooks/.vaultpwd
+    3). The vault should define an Ansible variable called password that contains the clear text password drone
+
+14. Implement error handling
+    Create a playbook on ansible.lab7.example.com called /home/ansible/playbooks/faileweb.yml that does the following:
+    1). Attempts to install and start the service ex407-server on node1
+    2). If either the install of the service or the attempt to start the service fails the playbook captures the output the task and displays it 
+    3). All tasks must execute regardless of whether an individual task fails
+    4). If the install task fails, in addition to capturing the output, a separate debug message must display the message "Installation failed"
+    5). If the setup task fails, in addition to capturing the output, a separate debug message must display the message "Starting failed"
+    6). If any task fails, a separate message handler should display the message "playbook was not successful"

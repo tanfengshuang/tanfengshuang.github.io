@@ -142,6 +142,36 @@ The SysV IPC mechanisms are tuned using entries in /proc/sys/kernel/. The sysctl
     4. The maximum number of semaphore arrays.
 
 ```
+# ipcs --help
+
+Usage:
+ ipcs [resource ...] [output-format]
+ ipcs [resource] -i <id>
+
+Options:
+ -i, --id <id>  print details on resource identified by id
+ -h, --help     display this help and exit
+ -V, --version  output version information and exit
+
+Resource options:
+ -m, --shmems      shared memory segments
+ -q, --queues      message queues
+ -s, --semaphores  semaphores
+ -a, --all         all (default)
+
+Output format:
+ -t, --time        show attach, detach and change times
+ -p, --pid         show creator and last operations PIDs
+ -c, --creator     show creator and owner
+ -l, --limits      show resource limits
+ -u, --summary     show status summary
+     --human       show sizes in human readable format
+ -b, --bytes       show sizes in bytes
+
+For more details see ipcs(1).
+```
+
+```
 # ipcs
 ------ Message Queues --------
 key        msqid      owner      perms      used-bytes   messages
@@ -348,7 +378,7 @@ In order to use the large pages, processes must request them using either the mm
 ```
 1. mmap
 # mkdir /largepage
-# mount -t hugetlbfs none /largepage
+# mount -t hugetlbfs none /largepage                -> 这里的 none 就是表明非物理设备而是用于虚拟文件系统的
 # mount
 /dev/mapper/vg_cloudqe16vm01-lv_root on / type ext4 (rw)
 proc on /proc type proc (rw)

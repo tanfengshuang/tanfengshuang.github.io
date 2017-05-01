@@ -43,50 +43,48 @@ iptables的基本语法格式
 
 iptables命令的管理控制选项
 
--A 在指定链的末尾添加（append）一条新的规则
--D 删除（delete）指定链中的某一条规则，可以按规则序号和内容删除
--I 在指定链中插入（insert）一条新的规则，默认在第一行添加
--R 修改、替换（replace）指定链中的某一条规则，可以按规则序号和内容替换
--L 列出（list）指定链中所有的规则进行查看
--E 重命名用户定义的链，不改变链本身
--F 清空（flush）
--N 新建（new-chain）一条用户自己定义的规则链
--X 删除指定表中用户自定义的规则链（delete-chain）
--P 设置指定链的默认策略（policy）
--Z 将所有表的所有链的字节和数据包计数器清零
--n 使用数字形式（numeric）显示输出结果
--v 查看规则表详细信息（verbose）的信息
--V 查看版本(version)
--h 获取帮助（help）
+*    -A 在指定链的末尾添加（append）一条新的规则
+*    -D 删除（delete）指定链中的某一条规则，可以按规则序号和内容删除
+*    -I 在指定链中插入（insert）一条新的规则，默认在第一行添加
+*    -R 修改、替换（replace）指定链中的某一条规则，可以按规则序号和内容替换
+*    -L 列出（list）指定链中所有的规则进行查看
+*    -E 重命名用户定义的链，不改变链本身
+*    -F 清空（flush）
+*    -N 新建（new-chain）一条用户自己定义的规则链
+*    -X 删除指定表中用户自定义的规则链（delete-chain）
+*    -P 设置指定链的默认策略（policy）
+*    -Z 将所有表的所有链的字节和数据包计数器清零
+*    -n 使用数字形式（numeric）显示输出结果
+*    -v 查看规则表详细信息（verbose）的信息
+*    -V 查看版本(version)
+*    -h 获取帮助（help）
 
 
 防火墙处理数据包的四种方式
 
-ACCEPT 允许数据包通过
-DROP 直接丢弃数据包，不给任何回应信息
-REJECT 拒绝数据包通过，必要时会给数据发送端一个响应的信息。
-LOG在/var/log/messages文件中记录日志信息，然后将数据包传递给下一条规则
+*    ACCEPT 允许数据包通过
+*    DROP 直接丢弃数据包，不给任何回应信息
+*    REJECT 拒绝数据包通过，必要时会给数据发送端一个响应的信息。
+*    LOG在/var/log/messages文件中记录日志信息，然后将数据包传递给下一条规则
 
 
 通用匹配：源地址目标地址的匹配
-	-s (source)：指定作为源地址匹配，这里不能指定主机名称，必须是IP
-		IP | IP/MASK | 0.0.0.0/0.0.0.0
-		而且地址可以取反，加一个“!”表示除了哪个IP之外
-	-d (destination)：表示匹配目标地址
-	-p (protocol)：用于匹配协议的（这里的协议通常有3种，TCP/UDP/ICMP）
-	-i (input interface)：从这块网卡流入的数据, 流入一般用在INPUT和PREROUTING上
-	-o (output interface): 从这块网卡流出的数据, 流出一般在OUTPUT和POSTROUTING上
-	-j (jump to target): 指定了当与规则(Rule)匹配时如何处理数据包, 可能的值是ACCEPT, DROP, QUEUE, RETURN, 还可以指定其他链（Chain）作为目标
+*	-s (source)：指定作为源地址匹配，这里不能指定主机名称，必须是IP(IP | IP/MASK | 0.0.0.0/0.0.0.0), 而且地址可以取反，加一个“!”表示除了哪个IP之外
+*	-d (destination)：表示匹配目标地址
+*	-p (protocol)：用于匹配协议的（这里的协议通常有3种，TCP/UDP/ICMP）
+*	-i (input interface)：从这块网卡流入的数据, 流入一般用在INPUT和PREROUTING上
+*	-o (output interface): 从这块网卡流出的数据, 流出一般在OUTPUT和POSTROUTING上
+*	-j (jump to target): 指定了当与规则(Rule)匹配时如何处理数据包, 可能的值是ACCEPT, DROP, QUEUE, RETURN, 还可以指定其他链（Chain）作为目标
 
 
 描述规则的扩展参数
 
 对规则有了一个基本描述之后，有时候我们还希望指定端口、TCP标志、ICMP类型等内容。
 
---sport, --source-port 源端口: 针对 -p tcp 或者 -p udp, 可以指定端口号或者端口名称，例如"--sport 22"与"--sport ssh", 使用冒号可以匹配端口范围，如--sport 22:100″
---dport, --destination-port 目的端口: 针对-p tcp 或者 -p udp, 与参数--sport类似
---tcp-flags TCP标志 针对-p tcp，可以指定由逗号分隔的多个参数，有效值可以是：SYN, ACK, FIN, RST, URG, PSH，可以使用ALL或者NONE
---icmp-type ICMP类型 针对-p icmp， --icmp-type 0 表示Echo Reply； --icmp-type 8 表示Echo Request
+*    --sport, --source-port 源端口: 针对 -p tcp 或者 -p udp, 可以指定端口号或者端口名称，例如"--sport 22"与"--sport ssh", 使用冒号可以匹配端口范围，如--sport 22:100″
+*    --dport, --destination-port 目的端口: 针对-p tcp 或者 -p udp, 与参数--sport类似
+*    --tcp-flags TCP标志 针对-p tcp，可以指定由逗号分隔的多个参数，有效值可以是：SYN, ACK, FIN, RST, URG, PSH，可以使用ALL或者NONE
+*    --icmp-type ICMP类型 针对-p icmp， --icmp-type 0 表示Echo Reply； --icmp-type 8 表示Echo Request
 
 
 iptables防火墙规则的保存与恢复
@@ -122,76 +120,76 @@ iptables-save把规则保存到文件中，再由目录rc.d下的脚本（/etc/r
 
 # iptables -L
 Chain INPUT (policy ACCEPT)
-target     prot opt source               destination         
+target     prot opt source               destination
 ACCEPT     icmp --  anywhere             anywhere            icmp echo-reply 
 DROP       icmp --  anywhere             anywhere            icmp echo-request 
 
 Chain FORWARD (policy ACCEPT)
-target     prot opt source               destination         
+target     prot opt source               destination
 
 Chain OUTPUT (policy ACCEPT)
-target     prot opt source               destination         
+target     prot opt source               destination
 
 # iptables -L -v
 Chain INPUT (policy ACCEPT 47 packets, 3288 bytes)
- pkts bytes target     prot opt in     out     source               destination         
+ pkts bytes target     prot opt in     out     source               destination
     3   252 ACCEPT     icmp --  any    any     anywhere             anywhere            icmp echo-reply 
   133 11172 DROP       icmp --  any    any     anywhere             anywhere            icmp echo-request 
 
 Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
- pkts bytes target     prot opt in     out     source               destination         
+ pkts bytes target     prot opt in     out     source               destination
 
 Chain OUTPUT (policy ACCEPT 28 packets, 3296 bytes)
- pkts bytes target     prot opt in     out     source               destination         
+ pkts bytes target     prot opt in     out     source               destination
 
 # iptables -L -v -n
 Chain INPUT (policy ACCEPT 60 packets, 4164 bytes)
- pkts bytes target     prot opt in     out     source               destination         
+ pkts bytes target     prot opt in     out     source               destination
     3   252 ACCEPT     icmp --  *      *       0.0.0.0/0            0.0.0.0/0           icmp type 0 
   137 11508 DROP       icmp --  *      *       0.0.0.0/0            0.0.0.0/0           icmp type 8 
 
 Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
- pkts bytes target     prot opt in     out     source               destination         
+ pkts bytes target     prot opt in     out     source               destination
 
 Chain OUTPUT (policy ACCEPT 35 packets, 4628 bytes)
- pkts bytes target     prot opt in     out     source               destination         
+ pkts bytes target     prot opt in     out     source               destination
 
 # iptables -L -v -n --line-number
 Chain INPUT (policy ACCEPT 110 packets, 7724 bytes)
-num   pkts bytes target     prot opt in     out     source               destination         
+num   pkts bytes target     prot opt in     out     source               destination
 1        3   252 ACCEPT     icmp --  *      *       0.0.0.0/0            0.0.0.0/0           icmp type 0 
 2      150 12600 DROP       icmp --  *      *       0.0.0.0/0            0.0.0.0/0           icmp type 8 
 
 Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
-num   pkts bytes target     prot opt in     out     source               destination         
+num   pkts bytes target     prot opt in     out     source               destination
 
 Chain OUTPUT (policy ACCEPT 61 packets, 7708 bytes)
-num   pkts bytes target     prot opt in     out     source               destination    
+num   pkts bytes target     prot opt in     out     source               destination
 
 
 
 # iptables -F
 # iptables -L
 Chain INPUT (policy ACCEPT)
-target     prot opt source               destination         
+target     prot opt source               destination
 
 Chain FORWARD (policy ACCEPT)
-target     prot opt source               destination         
+target     prot opt source               destination
 
 Chain OUTPUT (policy ACCEPT)
-target     prot opt source               destination      
+target     prot opt source               destination
 
 # iptables -A INPUT -p tcp --dport 22 -j ACCEPT
 # iptables -A INPUT -i lo -j ACCEPT
 # iptables -P INPUT DROP
 # iptables -L -v -n --line-number
 Chain INPUT (policy DROP 28 packets, 2280 bytes)
-num   pkts bytes target     prot opt in     out     source               destination         
+num   pkts bytes target     prot opt in     out     source               destination
 1      142 10268 ACCEPT     tcp  --  *      *       0.0.0.0/0            0.0.0.0/0           tcp dpt:22 
-2        0     0 ACCEPT     all  --  lo     *       0.0.0.0/0            0.0.0.0/0           
+2        0     0 ACCEPT     all  --  lo     *       0.0.0.0/0            0.0.0.0/0
 
 Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
-num   pkts bytes target     prot opt in     out     source               destination         
+num   pkts bytes target     prot opt in     out     source               destination
 
 Chain OUTPUT (policy ACCEPT 12 packets, 1312 bytes)
 num   pkts bytes target     prot opt in     out     source               destination 
