@@ -77,3 +77,23 @@ gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub
 # yum install google-chrome-stable
 ```
 
+
+
+
+> I don't know, how to install webdriver? How to put it to the PATH?
+
+Actually now Selenium is supporting executable geckodriver.exe to launch Mozilla Firefox >= v47 just like other drivers.
+
+To work around you need to download executable geckodriver.exe v0.8.0 for 32bit and extract downloaded zip into your system at any location and set Syetem property with webdriver.gecko.driver to point with download executable geckodriver location as below :-
+
+```
+** Settings ***
+Library  OperatingSystem
+*** Keywords ****
+Set Environment Variable  webdriver.gecko.driver  path/to/geckodriver.exe
+```
+
+> download geckodriver
+
+https://github.com/mozilla/geckodriver/releases
+
