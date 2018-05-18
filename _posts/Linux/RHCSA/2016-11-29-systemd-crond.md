@@ -37,11 +37,11 @@ tags: RHCSA systemd systemctl at crontab ssh
 
 *    0 关机                      poweroff.target     runlevel0.target
 *    1 单用户                    rescue.target       runlevel1.target
-*    2 字符多用户界面，无网络    multi-user.target   runlevel2.target
-*    3 字符多用户界面，生产模式  multi-user.target   runlevel3.target
+*    2 字符多用户界面，无网络       multi-user.target   runlevel2.target
+*    3 字符多用户界面，生产模式     multi-user.target   runlevel3.target
 *    4 保留模式                  multi-user.target   runlevel4.target
-*    5 图形化多用户模式          graphical.target    runlevel5.target
-*    6 重启                      reboot.target       runlevel6.target
+*    5 图形化多用户模式           graphical.target    runlevel5.target
+*    6 重启                     reboot.target       runlevel6.target
 
 
 ```
@@ -64,7 +64,7 @@ tags: RHCSA systemd systemctl at crontab ssh
 graphical.target
 
 设置默认的开机模式
-# systemctl set-fault graphical.target
+# systemctl set-default graphical.target
 
 切换到其他模式
 # systemctl isolate multi-user.target
@@ -81,7 +81,7 @@ graphical.target
 
 ###### 配置文件
 
-/etc/ssh/ssh_config     ssh客户端配置文件    
+/etc/ssh/ssh_config     ssh客户端配置文件
 /etc/ssh/sshd_config    ssh服务器配置文件
 
 ```
@@ -117,14 +117,14 @@ lrzsz-0.12.20-39.fc24.x86_64
 
 ##### at
 
-*    at <时间描述>    
+*    at <时间描述>
 
 >    at> <任务描述>
 
 >    at> <ctrl+d>
 
-*    atq 查询当前用户正在等待的计划任务    
-*    atrm <任务号>   删除一个正在等待的计划任务    
+*    atq 查询当前用户正在等待的计划任务
+*    atrm <任务号>   删除一个正在等待的计划任务
 *    可以在配置文件/etc/at.deny中添加禁止执行at命令的用户
 
 ```
@@ -156,7 +156,7 @@ lrzsz-0.12.20-39.fc24.x86_64
 ```
 时间配置格式:
   *       *       *      *          *         指令
-每分钟  每小时  每天    每月    每周星期几  任务描述
+每分钟  每小时     每天    每月     每周星期几   任务描述
 
 时间数值的特殊表示方法
 *   表示该范围内的任意时间

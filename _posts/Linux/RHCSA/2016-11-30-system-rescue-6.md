@@ -10,10 +10,10 @@ tags: RHCSA rescue
 
 ### 密码修复
 
-开机读秒按任意键    
-grub配置按e    
-选择kernel按3    
-在最后添加空格1，回车后按b启动，进入单用户模式    
+开机读秒按任意键
+grub配置按e
+选择kernel按3
+在最后添加空格1，回车后按b启动，进入单用户模式
 
 ```
 getenforce
@@ -63,10 +63,10 @@ grub> boot
 
 ###### 选择修复模式
 
-光盘启动选择Rescue installed system    
-若需网络引导，选择URL模式，本地光盘选择Local cdrom，且无需网络支持    
-continue    
-shell -> start shell    
+光盘启动选择Rescue installed system
+若需网络引导，选择URL模式，本地光盘选择Local cdrom，且无需网络支持
+continue
+shell -> start shell
 
 
 ###### 修复fstab
@@ -122,7 +122,7 @@ title linux for resue
 # rpm -ivh /mnt/cdrom/Packages/initscripts-9.03.17-1.el6.x86_64.rpm --force
 ```
 
-再次exit退出到图像界面，选择reboot         
+再次exit退出到图像界面，选择reboot
 重启后系统自动执行selinux relabel，几分钟后自动重启，至此，系统恢复完成
 
 

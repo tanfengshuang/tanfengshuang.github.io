@@ -228,7 +228,7 @@ Ansible 命令行选项
 *    设置 	        命令行选项
 *    inventory 	    -i
 *    remote_user 	-u
-*    become 	        --become， -b
+*    become 	    --become， -b
 *    become_method 	--become-method
 *    become_user 	--become-user
 *    become_ask_pass --ask-become-pass， -K

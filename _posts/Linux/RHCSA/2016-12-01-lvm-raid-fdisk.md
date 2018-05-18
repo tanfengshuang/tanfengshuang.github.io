@@ -10,7 +10,7 @@ tags: RHCSA vgcreate lvcreate vgs lvs lvresize fdisk mkswap swapon mdadmin mount
 
 ### superblock 超级区块
 
-*    superblock是记录整个filesystem相关信息的地方，没有superblock就没有filesystem，它记录的信息主要有  
+superblock是记录整个filesystem相关信息的地方，没有superblock就没有filesystem，它记录的信息主要有:
 *    block与inode的总量
 *    未使用与已使用的inode/block数量
 *    block与inode大小(block为1，2，3k，inode为128bytes)
@@ -25,7 +25,7 @@ tags: RHCSA vgcreate lvcreate vgs lvs lvresize fdisk mkswap swapon mdadmin mount
 *    partprobe   重读分区表, 使用fdisk工具只是将分区信息写到磁盘，如果需要mkfs磁盘分区则需要重启系统，而使用partprobe则可以使kernel重新读取分区信息，从而避免重启系统。
 *    partx       类似partprobe
 *    swapon      -s / -a / <设备名>
-*    swapoff     
+*    swapoff
 
 
 ### 创建文件系统

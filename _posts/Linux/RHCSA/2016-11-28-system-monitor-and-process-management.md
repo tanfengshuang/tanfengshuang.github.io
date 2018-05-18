@@ -10,7 +10,7 @@ tags: RHCSA kill pidof pgrep nice last lastlog pstree jobs fg bg
 ### 查询系统状况
 
 *    uname
-*    hostnam
+*    hostname
 *    last       列出最近的用户登录
 *    lastlog    列出每一个用户的最近登录状态
 *    free
@@ -57,7 +57,7 @@ tags: RHCSA kill pidof pgrep nice last lastlog pstree jobs fg bg
 48) SIGRTMIN+14 49) SIGRTMIN+15 50) SIGRTMAX-14 51) SIGRTMAX-13 52) SIGRTMAX-12
 53) SIGRTMAX-11 54) SIGRTMAX-10 55) SIGRTMAX-9  56) SIGRTMAX-8  57) SIGRTMAX-7
 58) SIGRTMAX-6  59) SIGRTMAX-5  60) SIGRTMAX-4  61) SIGRTMAX-3  62) SIGRTMAX-2
-63) SIGRTMAX-1  64) SIGRTMAX    
+63) SIGRTMAX-1  64) SIGRTMAX
 ```
 
 #### 搜索进程

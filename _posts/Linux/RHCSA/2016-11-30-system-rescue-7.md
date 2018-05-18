@@ -9,8 +9,8 @@ tags: RHCSA rescue
 
 ### 破密码
 
-开机菜单栏第一行按e，在linux16行尾，加入rc.break console=tty0  
-ctrl+x继续启动  
+开机菜单栏第一行按e，在linux16行尾，加入rc.break console=tty0
+ctrl+x继续启动
 
 ```
 mount -o remount,rw /sysroot
@@ -49,7 +49,7 @@ grub2-mkconfig -o /boot/grub2/grub.cfg
 /dev/sda6   /mnt    xfs     defaults    0   0   -> 输入一个错误的dev设备，让系统在启动时加载设备失败
 ```
 
-重启后系统无法启动，等待一段时间后输入root的密码可以进入单用户模式，修改fstab后可以正常启动    
+重启后系统无法启动，等待一段时间后输入root的密码可以进入单用户模式，修改fstab后可以正常启动
 如果不能写入，需要重新以读写的模式挂载根
 
 ```
@@ -59,7 +59,7 @@ mount -o remount,rw /
 
 ### 应急模式
 
-按e，在linux16行尾加入emergency(应急模式)    
+按e，在linux16行尾加入emergency(应急模式)
 和单用户模式相似，只不过不加载/boot分区，也需要root密码
 
 
@@ -71,9 +71,9 @@ dd if=/dev/zero of=/dev/sda bs=446 count=1
 systemctl reboot
 ```
 
-Troubleshooting (排错模式)    
-选择Rescue a Red hat Enterprise Linux  
-continue    
+Troubleshooting (排错模式)
+选择Rescue a Red hat Enterprise Linux
+continue
 
 ```
 chroot /mnt/sysimage

@@ -97,3 +97,31 @@ Set Environment Variable  webdriver.gecko.driver  path/to/geckodriver.exe
 
 https://github.com/mozilla/geckodriver/releases
 
+
+======
+ERROR:
+[ WARN ] Keyword 'Capture Page Screenshot' could not be run on failure: No browser is open
+Activate account - verify url location                                | FAIL |
+Parent suite setup failed:
+WebDriverException: Message: 'geckodriver' executable needs to be in PATH.
+======
+
+1. Go to the geckodriver releases page. Find the latest version of the driver for your platform and download it. For example:
+
+wget https://github.com/mozilla/geckodriver/releases/download/v0.18.0/geckodriver-v0.18.0-linux64.tar.gz
+
+2. Extract the file with:
+
+tar -xvzf geckodriver*
+
+3. Make it executable:
+
+chmod +x geckodriver
+
+4. Add the driver to your PATH so other tools can find it:
+
+mv geckodriver /usr/local/bin/
+
+
+
+

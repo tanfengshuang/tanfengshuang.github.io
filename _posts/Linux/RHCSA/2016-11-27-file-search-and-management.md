@@ -64,7 +64,7 @@ lrwxrwxrwx. 1 root root 27 Oct 10 20:49 /etc/docker/certs.d/redhat.com/redhat-ca
 
 *    head / tail / more / less     文件的查看
 *    wc     统计文件的行 词 字数
-*    grep   
+*    grep
 *    sort
 *    uniq
 *    tr     转换字符
@@ -97,10 +97,10 @@ lrwxrwxrwx. 1 root root 27 Oct 10 20:49 /etc/docker/certs.d/redhat.com/redhat-ca
 *    -n     按照数字的大小进行排序
 *    -k     是指定需要爱排序的栏位
 
--k参数    
-FStart.CStart Modifie,FEnd.CEnd Modifier   
--------Start--------,-------End--------    
-FStart.CStart 选项 , FEnd.CEnd 选项   
+-k 参数
+FStart.CStart Modifie,FEnd.CEnd Modifier
+-------Start--------,-------End--------
+FStart.CStart 选项 , FEnd.CEnd 选项
 
 ```
 # cat sort.txt 
@@ -206,7 +206,7 @@ hello world
 ```
 # cat test.txt 
 No Name Mark Percent 
-01 tom 69 91 
+01 tom  69 91 
 02 jack 71 87 
 03 alex 68 98 
 
