@@ -1,13 +1,23 @@
 ---
 layout: post
-title:  "Executing Commands(280-3)"
+title:  "Executing Commands(280-4)"
 categories: Linux
 tags: RHCA 280
 ---
 
-### OC 
+### Installing Native Command-line Tools
+
+three command-line tools are:
+
+*    oadm: Oriented toward system administration tasks. It can be used to manage resources such as routers, registries, security policies, cluster policies, projects, and users. Many of the sub-commands used in this tool require special administrative privileges that are normally inaccessible to a regular user of the cluster.
+*    oc: Primarily oriented toward user-initiated tasks. It is first point of entry for developers to perform operations against the cluster. Common operations include deploying applications, scaling applications, checking the status of projects, and similar tasks.
+*    openshift: Oriented toward system administration tasks, provides a convenient wrapper around much of the common functionality between oadm and oc commands. When the oc command is not available, the same functionality is accessible using the openshift cli command. The same is true if the oadm command is missing. Administrative functionality can be invoked with the openshift admin command.
+
+###### oc
 
 ```
+# yum install -y atomic-openshift-clients
+
 # oc help
 OpenShift Client 
 
@@ -103,10 +113,38 @@ You have one project on this server: "ethel"
 
 Using project "ethel".
 
+也可以指定登录后默认使用的project
+# oc login https://master.podX.example.com:8443 -u student -p redhat -n shuang
+
 # oc whoami
 ftan
 
-# oc new-project working
+创建一个新项目
+# oc new-project working    
+
+然后可以在这个项目上创建新的app
+# oc new-app
+
+切换项目
+# oc project shuang
+Now usring project "shuang" on server "https://master.lab.example.com:8443".
+
+查看当前的所在项目
+# oc project
+Using project "shuang" on server "https://master.lab.example.com:8443".
+
+查看build
+# oc get build
+
+查看build的log，和通过网页上看的一样
+# oc log build/myphp-1
+
+查看route - Openshift把主机和端口直接映射成一个域名 - myphp-shuang.cloudapps.example.com
+# oc get route
+
+# 查看整个项目的状态
+# oc status
+
 # oc delete project working
 # oc status
 In project ethel - account-manager-stage.app.eng.rdu2.redhat.com (ethel) on server https://open.paas.redhat.com:443
@@ -167,19 +205,19 @@ NAME              READY     STATUS      RESTARTS   AGE
 po/test-1-0dxia   1/1       Running     0          2h
 po/test-1-build   0/1       Completed   0          2h
 
-# List all pods in ps output format.
+List all pods in ps output format.
 # oc get pods
   
-# List a single replication controller with specified ID in ps output format.
+List a single replication controller with specified ID in ps output format.
 # oc get rc redis
 
-# List all pods and show more details about them.
+List all pods and show more details about them.
 # oc get -o wide pods
 
-# List a single pod in JSON output format.
+List a single pod in JSON output format.
 # oc get -o json pod redis-pod
 
-# Return only the status value of the specified pod.
+Return only the status value of the specified pod.
 # oc get -o template pod redis-pod --template={{.currentState.status}}
 
 ```
@@ -199,10 +237,10 @@ Endpoints:		10.1.19.171:8080
 Session Affinity:	None
 No events.
 
-# Provide details about the ruby-22-centos7 image repository
+Provide details about the ruby-22-centos7 image repository
 # oc describe imageRepository ruby-22-centos7
 
-# Provide details about the ruby-sample-build build configuration
+Provide details about the ruby-sample-build build configuration
 # oc describe bc ruby-sample-build
 ```
 
@@ -350,11 +388,155 @@ Use "oc options" for a list of global command-line options (applies to all comma
 ```
 
 
-### Guided Exercise: Managing an OpenShift instance using oc
+### Managing an OpenShift instance using oc
 
+```
+1. Get the current status of the OCP cluster.
+
+    a. Open a new terminal on the workstation host and access the master host:
+
+    [student@workstation ~]$ ssh root@master
+
+    b. On the master host, log in as the system:admin user using the oc command:
+
+    [root@master ~]# oc login -u system:admin
+
+    c. On the master host, ensure that you are using the default project:
+
+    [root@master]# oc project default
+
+    d. On the master host, list the nodes that are part of the cluster and their status. Take note of any nodes that have SchedulingDisabled as part of their status descriptions. Applications (pods) cannot be deployed on such nodes.
+
+    [root@master ~]# oc get nodes
+    NAME                     STATUS                      AGE
+    master.lab.example.com   Ready,SchedulingDisabled    1d
+    node.lab.example.com     Ready                       1d
+
+    e. Display more detailed information about the master:
+
+    [root@master ~]# oc describe node master.lab.example.com | head -n5
+    Name:           master.lab.example.com
+    Labels:         beta.kubernetes.io/arch=amd64
+                    beta.kubernets.io/os=linux
+                    kubernetes.io/hostname=master.lab.example.com
+    Taints:         <none>
+
+    f. Similarly, examine the description of the node:
+
+    [root@master ~]# oc describe node node.lab.example.com | head -n5
+    Name:           node.lab.example.com
+    Labels:         beta.kubernetes.io/arch=amd64
+                    beta.kubernets.io/os=linux
+                    kubernetes.io/hostname=node.lab.example.com
+                    region=infra
+
+    g. Inspect the list of existing pods by using the oc get pods command. Note that these are the same pods that were deployed previously.
+
+    [root@master ~]# oc get pods
+    NAME                       READY    STATUS     RESTARTS    AGE
+    docker-registry-4-ku34r    1/1      Running    3           3d
+    registry-console-1-zxreg   1/1      Running    3           3d
+    router-1-yhunh             1/1      Running    3           3d
+
+    h. Use the describe command against the docker-registry pod.
+
+    [root@master ~]# oc describe pod docker-registry-4-ku34r | head
+    Name:             docker-registry-4-ku34r
+    Namespace:        default
+    Security Policy:  restricted
+    Node:             node.lab.example.com/172.25.250.11
+    Start Time:       Mon, 23 Jan 2017 12:17:28 -0500
+    Labels:           deployment=docker-registry-4
+                      deploymentconfig=docker-registry
+                      docker-registry=default
+    Status:           Running
+    IP:               10.129.0.12 
+
+2. In this section, basic troubleshooting steps are executed.
+
+    a. One of the most useful commands available to the administrator is the oc exec command. This command allows the user to execute remote commands against a pod. Run the ls command on the registry pod.
+
+    [root@master ~]# oc exec docker-registry-4-ku34r ls /
+    bin
+    boot
+    config.yml
+    dev
+    etc
+    home
+    ...
+
+    b. Arbitrary commands can be executed, provided they are available within the container and pods where you execute them. This ability can be useful for diagnosing files, contents, and processes from within the container itself. Inspect the /etc/resolv.conf file.
+
+    [root@master ~]# oc exec docker-registry-4-ku34r cat /etc/resolv.conf
+    search default.svc.cluster.local svc.cluster.local cluster.local lab.example.com example.com
+    nameserver 172.25.250.11
+    nameserver 172.25.250.11
+    options ndots:5
+
+    c. Alternatively, the oc exec command also accepts additional arguments that enable the use of an interactive console. This is useful for more in-depth troubleshooting sessions. On the master node, launch a remote shell in the pod:
+
+    [root@master ~]# oc exec docker-registry-4-ku34r -it bash
+    bash-4.2$
+
+    Run the same ls command that was executed before without the interactive shell:
+
+    bash-4.2$ ls /
+    bin  config.yml etc  lib   lost+found mnt proc     root sbin sys usr
+    boot dev        home lib64 media      opt registry run  srv  tmp var
+
+    Exit the remote shell:
+
+    bash-4.2$ exit
+    exit
+
+    d. Use the oc get events command to view life cycle events in the OCP cluster:
+
+    [root@master ~]# oc get events | head -n3
+    LASTSEEN   FIRSTSEEN  COUNT  NAME                     KIND   
+     SUBOBJECT                  TYPE      REASON     SOURCE
+    MESSAGE
+    27m        27m        1      docker-registry-4-ku34r  Pod
+     spec.containers{registry}  Normal    Pulled     {kubelet.node.lab.example.com}
+    Container image “openshift3/ose-docker-registry:v3.4.0.39” already present on machine
+    27m        27m        1      docker-registry-4-ku34r  Pod
+     spec.containers{registry}  Normal    Created    {kubelet.node.lab.example.com}
+    Created container with docker id 3ca27a5ae688; Security:[seccomp=unconfined]
+
+    Information is presented in a tabular format in the order of events. The output on your master may be different than the one shown above.
+
+    This concludes the lab. 
+```
 
 
 ### Managing Security Policies
+
+权限和规则：
+*    Cluster policy: 管理整体集群的策略，对整个OCP和所有project生效，用oadm设置
+*    Local policy: 用户或组对某个project的策略，用oc设置
+*    rules： 规则
+*    roles： 角色是规则的集合
+*    binding： 讲角色分配给某个用户或组
+
+role：
+*    admin： 单独project的管理者
+*    basic-user： 可获取项目和用户的基本信息
+*    cluster-admin： 集群管理员，可管理整个OCP和所有项目
+*    cluster-status： 可查看集群信息
+*    edit： 可修改project，但不能更改role和binding
+*    self-provsioner： 可以自己建立项目
+*    view： 可以更改role和binding
+
+在workstaion上：
+*    oc project                     显示当前项目
+*    oc new-project shuangproject   建立项目
+*    oc project shuangproject       切换到..项目
+*    oc get pod
+*    oc policy add-role-to-user admin shuang
+*    oc describe policybinding      运行完上面命令后，通过这条命令可以看到shuang用户出想在RoleBinding[admin]后面
+*    oc policy remove-role-from-user admin shuang
+*    oc policy remove-user shuang   删除shuang用户对当前项目的所有权限
+*    oc describe policybinding
+
 
 
 OpenShift Enterprise (OSE) manages authorization policies for each login using authorization policies. Authorization policies are responsible for determining whether a developer is allowed to perform a given action within a project. There are two levels of authorization policy:
@@ -381,7 +563,7 @@ OpenShift provides, by default, seven roles:
 
 
 ```
-# Viewing cluster policy. A matrix of the verbs and resources associated with these roles can be visualized in the cluster policy with the following command:
+Viewing cluster policy. A matrix of the verbs and resources associated with these roles can be visualized in the cluster policy with the following command:
 # oc describe clusterPolicy default
 Name:				 default
 Created:			    4 hours ago
@@ -395,7 +577,7 @@ basic-user			Verbs					                         Resource  ...
 ... OUTPUT OMITTED ...
 
 
-# To view the current set of cluster bindings, which shows the users and groups that are bound to various roles:
+To view the current set of cluster bindings, which shows the users and groups that are bound to various roles:
 # oc describe clusterPolicyBindings :default 
 Name:						:default
 Created:					    4 hours ago
@@ -413,12 +595,13 @@ RoleBinding[cluster-admins]:
 ... OUTPUT OMITTED ...
 
 
-# Viewing local policy. The list of local roles and their associated rule sets are not visible within a local policy. The local bindings, however, can be listed using the following command:
+Viewing local policy. The list of local roles and their associated rule sets are not visible within a local policy. The local bindings, however, can be listed using the following command:
 # oc describe policyBindings :default 
 
-# The current project is used when viewing local policy by default. The flag -n can be used to specify an alternative project:
+The current project is used when viewing local policy by default. The flag -n can be used to specify an alternative project:
 # oc describe policyBindings :default -n myproject
 ```
+
 
 ###### Managing role bindings
 
@@ -436,11 +619,14 @@ By default, the current project is used when describing the local policy. The fl
 *    oadm policy remove-group <groupname> 	                Remove specified groups and all of their roles in the current project.
 
 ```
-# By default, the user that creates a project will have a bind with the admin role. The following command will add a user called student to the admin role in the example project:
+By default, the user that creates a project will have a bind with the admin role. The following command will add a user called student to the admin role in the example project:
 # oadm policy add-role-to-user admin student -n example
 
-# The student user can be removed from the admin role in the example project with the following command:
+The student user can be removed from the admin role in the example project with the following command:
 # oadm policy remove-user student -n example
+
+查看
+# oc describe policybinding
 ```
 
 The cluster policy does not accept the -n flag because the it uses non-namespaced resources. The following commands are available for cluster policies:
@@ -452,11 +638,39 @@ The cluster policy does not accept the -n flag because the it uses non-namespace
 *    oadm policy remove-cluster-role-from-group <role> <groupname> 	Remove a role from specified groups for all projects in the cluster.
 
 ```
-# The following command is responsible to add the student user to the cluster-admin role:
+The following command is responsible to add the student user to the cluster-admin role:
 # oadm policy add-cluster-role-to-user cluster-admin student
+
+查看
+# oc describe clusterpolicybinding
 ```
 
 
+### Summary
+
+1. Red Hat OpenShift Container Platform provides three command-line clients:
+
+*    oadm: A tool used by administrators to create and manage low-level resources, such as the internal registry and the router.
+*    oc: A generic tool that can be used by administrators and developers to manage projects in OCP.
+*    openshift: An alias for the oc command.
+
+2. There are several essential commands to manage OpenShift resources that are available on the clients, such as:
+
+*    oc get resourceType resourceName: Outputs a summary with the important information from the resourceName.
+*    oc describe resourceType resourceName: Outputs detailed information from the resourceName.
+*    oc create: Creates a resource from an input, such as a file or an input stream.
+*    oc delete resourceType resourceName: Removes a resource from OCP.
+
+3. There are two levels of authorization policy:
+
+*    Cluster policy: Accesses all resources in OCP.
+*    Local policy: Accesses resources from specific projects in OCP.
+
+4. Authorization is managed using:
+
+*    Rules: Which commands are allowed in OCP.
+*    Roles: Who can access OCP.
+*    Binding: Which roles can execute the rules. 
 
 
 
